@@ -51,7 +51,7 @@ from rich.console import Console
 from datetime import datetime, timezone
 
 from threading import Lock, Event
-   status_lock = Lock()
+status_lock = Lock()
 
 rejoin_lock = Lock()
 
@@ -150,8 +150,8 @@ executors = {
 }
 
 
-workspace_paths = [f"{base_path}Workspace" for base_path in executors.values()] +
-   [f"{base_path}workspace" for base_path in executors.values()]
+workspace_paths = [f"{base_path}Workspace" for base_path in executors.values(
+)] + [f"{base_path}workspace" for base_path in executors.values()]
 
 globals()["workspace_paths"] = workspace_paths
 
@@ -403,7 +403,7 @@ class TermuxCompat:
                         proc = ProcInfo()
 
                         proc.info = {
-    'pid': pid, 'name': name, 'cmdline': cmdline}
+                            'pid': pid, 'name': name, 'cmdline': cmdline}
 
                         proc.pid = pid
 
@@ -595,9 +595,9 @@ class FileManager:
         try:
 
             os.makedirs(
-    os.path.dirname(
-        FileManager.SERVER_LINKS_FILE),
-         exist_ok=True)
+                os.path.dirname(
+                    FileManager.SERVER_LINKS_FILE),
+                exist_ok=True)
 
             with open(FileManager.SERVER_LINKS_FILE, "w") as file:
 
@@ -685,7 +685,7 @@ class FileManager:
             cmd_cat = f"cat {file_path}"
 
             result = subprocess.run(
-    cmd_cat, shell=True, capture_output=True, text=True)
+                cmd_cat, shell=True, capture_output=True, text=True)
 
             if result.returncode != 0:
 
@@ -851,13 +851,16 @@ class FileManager:
                         file.write(response.text)
 
                 print(
-                    f"\033[1;32m[ Shako.dev ] - {os.path.basename(destination)} downloaded successfully.\033[0m")
+                    f"\033[1;32m[ Shako.dev ] - {
+                        os.path.basename(destination)} downloaded successfully.\033[0m")
 
                 return destination
 
             else:
 
-                error_message = f"Failed to download {os.path.basename(destination)}. Status code: {response.status_code}"
+                error_message = f"Failed to download {
+                    os.path.basename(destination)}. Status code: {
+                    response.status_code}"
 
                 print(f"\033[1;31m[ Shako.dev ] - {error_message}\033[0m")
 
@@ -867,7 +870,8 @@ class FileManager:
 
         except Exception as e:
 
-            error_message = f"Error while downloading {os.path.basename(destination)}: {e}"
+            error_message = f"Error while downloading {
+                os.path.basename(destination)}: {e}"
 
             print(f"\033[1;31m[ Shako.dev ] - {error_message}\033[0m")
 
@@ -948,23 +952,23 @@ class FileManager:
         try:
 
             config = {
-    "webhook_url": webhook_url,
-    "device_name": device_name,
-    "interval": webhook_interval,
-    "disable_ui": globals().get(
-        "_disable_ui",
-        "0"),
-        "check_executor": globals()["check_exec_enable"],
-        "command_8_configured": globals().get(
-            "command_8_configured",
-            False),
-            "lua_script_template": globals().get(
-                "lua_script_template",
-                None),
+                "webhook_url": webhook_url,
+                "device_name": device_name,
+                "interval": webhook_interval,
+                "disable_ui": globals().get(
+                    "_disable_ui",
+                    "0"),
+                "check_executor": globals()["check_exec_enable"],
+                "command_8_configured": globals().get(
+                    "command_8_configured",
+                    False),
+                "lua_script_template": globals().get(
+                    "lua_script_template",
+                    None),
                 "package_prefix": globals().get(
                     "package_prefix",
                     "com.roblox"),
-                     }
+            }
 
             with open(FileManager.CONFIG_FILE, "w") as file:
 
@@ -1083,7 +1087,7 @@ class SystemMonitor:
         package_namez = RobloxManager.get_roblox_packages()
 
         for proc in TermuxCompat.process_iter(
-            ['name', 'pid', 'memory_info', 'cpu_percent']):
+                ['name', 'pid', 'memory_info', 'cpu_percent']):
 
             try:
 
@@ -1110,10 +1114,10 @@ class SystemMonitor:
                                     p.memory_info().rss / (1024 ** 2), 2)
 
                                 cpu_usage = round(
-    p.cpu_percent(
-        interval=None) /
-        TermuxCompat.cpu_count(),
-         2)
+                                    p.cpu_percent(
+                                        interval=None) /
+                                    TermuxCompat.cpu_count(),
+                                    2)
 
                             except BaseException:
 
@@ -1122,7 +1126,8 @@ class SystemMonitor:
                         full_name = package_name
 
                         package_names.append(
-                            f"{full_name} (PID: {proc.pid}, CPU: {cpu_usage}%, MEM: {mem_usage}MB)")
+                            f"{full_name} (PID: {
+                                proc.pid}, CPU: {cpu_usage}%, MEM: {mem_usage}MB)")
 
                         break
 
@@ -1267,14 +1272,14 @@ class UIManager:
         for i, service in enumerate(options, start=1):
 
             table.add_row(
-    f"[bold cyan][ {i} ][/bold cyan]",
-     f"[bold blue]{service}[/bold blue]")
+                f"[bold cyan][ {i} ][/bold cyan]",
+                f"[bold blue]{service}[/bold blue]")
 
         panel = Panel(
-    table,
-    title="[bold cyan]discord.gg/ghmaDgNzDa - Shako Edition[/bold cyan]",
-    border_style="cyan",
-     box=ROUNDED)
+            table,
+            title="[bold cyan]discord.gg/ghmaDgNzDa - Shako Edition[/bold cyan]",
+            border_style="cyan",
+            box=ROUNDED)
 
         console.print(Align.left(panel))
 
@@ -1365,7 +1370,7 @@ class RobloxManager:
             cookie_txt_path = os.path.join(current_dir, "cookie.txt")
 
             new_dir_path = os.path.join(
-    current_dir, "Shako.dev/Shako.dev - Data")
+                current_dir, "Shako.dev/Shako.dev - Data")
 
             new_cookie_path = os.path.join(new_dir_path, "cookie.txt")
 
@@ -1402,7 +1407,7 @@ class RobloxManager:
                         ck = str(line).strip()
 
                     if ck.startswith(
-                        "_|WARNING:") or ".ROBLOSECURITY" in ck or len(ck) > 100:
+                            "_|WARNING:") or ".ROBLOSECURITY" in ck or len(ck) > 100:
 
                         org.append(str(line).strip())
 
@@ -1459,8 +1464,8 @@ class RobloxManager:
             time.sleep(1)
 
             response = requests.get(
-    'https://users.roblox.com/v1/users/authenticated',
-     headers=headers)
+                'https://users.roblox.com/v1/users/authenticated',
+                headers=headers)
 
             if response.status_code == 200:
 
@@ -1478,7 +1483,8 @@ class RobloxManager:
 
             else:
 
-                error_message = f"Error verifying cookie: {response.status_code}"
+                error_message = f"Error verifying cookie: {
+                    response.status_code}"
 
                 print(f"\033[1;31m[ Shako.dev ] - {error_message}\033[0m")
 
@@ -1512,10 +1518,10 @@ class RobloxManager:
                 with requests.Session() as session:
 
                     primary_response = session.post(
-    "https://presence.roblox.com/v1/presence/users",
-    headers=headers,
-    json=body,
-     timeout=7)
+                        "https://presence.roblox.com/v1/presence/users",
+                        headers=headers,
+                        json=body,
+                        timeout=7)
 
                 primary_response.raise_for_status()
 
@@ -1540,10 +1546,10 @@ class RobloxManager:
                 with requests.Session() as session:
 
                     primary_response = session.post(
-    "https://presence.roproxy.com/v1/presence/users",
-    headers=headers,
-    json=body,
-     timeout=7)
+                        "https://presence.roproxy.com/v1/presence/users",
+                        headers=headers,
+                        json=body,
+                        timeout=7)
 
                 primary_response.raise_for_status()
 
@@ -1565,25 +1571,24 @@ class RobloxManager:
 
                     return None
 
-
-@staticmethod
-   def get_roblox_packages():
+    @staticmethod
+    def get_roblox_packages():
         packages = []
         try:
             # Tenta listar pacotes com o comando padrão do Android
             cmd = "pm list packages"
             result = subprocess.run(
-    cmd, shell=True, capture_output=True, text=True)
+                cmd, shell=True, capture_output=True, text=True)
 
             # CORREÇÃO CRÍTICA: Só tenta o comando alternativo se o primeiro FALHAR (ou vier vazio)
             # Antes estava '== 0', o que causava o erro de sobrescrever o
             # resultado bom
             if result.returncode != 0 or not result.stdout.strip():
                 result = subprocess.run(
-    "/system/bin/pm list packages",
-    shell=True,
-    capture_output=True,
-     text=True)
+                    "/system/bin/pm list packages",
+                    shell=True,
+                    capture_output=True,
+                    text=True)
 
             package_prefix = globals().get("package_prefix", "com.roblox")
 
@@ -1596,7 +1601,7 @@ class RobloxManager:
                         # Verifica se o prefixo bate OU se tem "roblox" em
                         # qualquer parte do nome
                         if (package_prefix in name) or (
-                            "roblox" in name.lower()):
+                                "roblox" in name.lower()):
                             packages.append(name)
             else:
                 print(
@@ -1626,13 +1631,11 @@ class RobloxManager:
 
             return
 
-
         print(
-            f"\033[1;93m[ Shako.dev ] - Found {len(packages)} packages. Starting FAST clean kill for all...\033[0m")
-
+            f"\033[1;93m[ Shako.dev ] - Found {
+                len(packages)} packages. Starting FAST clean kill for all...\033[0m")
 
         all_pids_to_kill = set()
-
 
         # Stage 1: Issue 'am force-stop' and collect all PIDs
 
@@ -1666,18 +1669,17 @@ class RobloxManager:
                 print(
                     f"\033[1;31m[ Shako.dev ] - Error getting PIDs for {package_name}: {e}\033[0m")
 
-
         # Short delay for 'am force-stop' commands to propagate
 
         time.sleep(0.25)
-
 
         # Stage 2: Kill all collected lingering PIDs
 
         if all_pids_to_kill:
 
             print(
-                f"\033[1;93m[ Shako.dev ] - Stage 2: Found {len(all_pids_to_kill)} lingering PIDs. Sending SIGKILL...\033[0m")
+                f"\033[1;93m[ Shako.dev ] - Stage 2: Found {
+                    len(all_pids_to_kill)} lingering PIDs. Sending SIGKILL...\033[0m")
 
             for pid in all_pids_to_kill:
 
@@ -1688,10 +1690,8 @@ class RobloxManager:
             print(
                 "\033[1;32m[ Shako.dev ] - Stage 2: No lingering PIDs found. 'am force-stop' was successful.\033[0m")
 
-
         print(
             "\033[1;32m[ Shako.dev ] - All Roblox processes have been issued kill commands.\033[0m")
-
 
     @staticmethod
     def kill_roblox_process(package_name):
@@ -1711,7 +1711,6 @@ class RobloxManager:
 
             time.sleep(0.25)
 
-
             pids = SystemMonitor.get_pids_for_package(package_name)
 
             if pids:
@@ -1728,12 +1727,10 @@ class RobloxManager:
                 print(
                     f"\033[1;32m[ Shako.dev ] - No lingering PIDs found for {package_name}.\033[0m")
 
-
             print(
                 f"\033[1;32m[ Shako.dev ] - Clean kill complete for {package_name}\033[0m")
 
             time.sleep(0.1)
-
 
         except Exception as e:
 
@@ -1741,8 +1738,8 @@ class RobloxManager:
                 f"\033[1;31m[ Shako.dev ] - Error during kill process for {package_name}: {e}\033[0m")
 
             Utilities.log_error(
-                f"Error in kill_roblox_process for {package_name}: {e}\n{traceback.format_exc()}")
-
+                f"Error in kill_roblox_process for {package_name}: {e}\n{
+                    traceback.format_exc()}")
 
     @staticmethod
     def delete_cache_for_package(package_name):
@@ -1782,7 +1779,6 @@ class RobloxManager:
             print(
                 f"\033[1;93m[ Shako.dev ] - Cache already clean for {package_name}\033[0m")
 
-
     @staticmethod
     def launch_roblox(package_name, server_link):
 
@@ -1791,7 +1787,6 @@ class RobloxManager:
             RobloxManager.kill_roblox_process(package_name)
 
             RobloxManager.delete_cache_for_package(package_name)
-
 
             with status_lock:
 
@@ -1802,45 +1797,40 @@ class RobloxManager:
                 if package_name in globals()["package_statuses"]:
 
                     globals()[
-                            "package_statuses"][package_name]["Status"] = f"\033[1;36mJoining Game (Skip Home/Update) for {package_name}...\033[0m"
+                        "package_statuses"][package_name]["Status"] = f"\033[1;36mJoining Game (Skip Home/Update) for {package_name}...\033[0m"
 
                     UIManager.update_status_table()
-
 
             print(
                 f"\033[1;35m[ Shako.dev ] - Executing Direct Launch (Skip Home) for {package_name}...\033[0m")
 
-
             launch_cmd = [
-    'am',
-    'start',
-    '-n',
-    f'{package_name}/com.roblox.client.ActivityProtocolLaunch',
-    '-a',
-    'android.intent.action.VIEW',
-    '-d',
-    server_link,
-    '-f',
-     '0x14000000' ]
-
+                'am',
+                'start',
+                '-n',
+                f'{package_name}/com.roblox.client.ActivityProtocolLaunch',
+                '-a',
+                'android.intent.action.VIEW',
+                '-d',
+                server_link,
+                '-f',
+                '0x14000000']
 
             subprocess.run(
-    launch_cmd,
-    stdout=subprocess.DEVNULL,
-     stderr=subprocess.DEVNULL)
+                launch_cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
 
             time.sleep(12)
-
 
             with status_lock:
 
                 if package_name in globals()["package_statuses"]:
 
                     globals()[
-                            "package_statuses"][package_name]["Status"] = "\033[1;32mJoined Roblox (Direct Launch)\033[0m"
+                        "package_statuses"][package_name]["Status"] = "\033[1;32mJoined Roblox (Direct Launch)\033[0m"
 
                     UIManager.update_status_table()
-
 
         except Exception as e:
 
@@ -1851,15 +1841,15 @@ class RobloxManager:
                 if package_name in globals()["package_statuses"]:
 
                     globals()[
-                            "package_statuses"][package_name]["Status"] = f"\033[1;31m{error_message}\033[0m"
+                        "package_statuses"][package_name]["Status"] = f"\033[1;31m{error_message}\033[0m"
 
                     UIManager.update_status_table()
 
             print(f"\033[1;31m[ Shako.dev ] - {error_message}\033[0m")
 
             Utilities.log_error(
-                f"Error in launch_roblox for {package_name}: {e}\n{traceback.format_exc()}")
-
+                f"Error in launch_roblox for {package_name}: {e}\n{
+                    traceback.format_exc()}")
 
     @staticmethod
     def fix_permissions(path, package_name):
@@ -1869,13 +1859,12 @@ class RobloxManager:
             cmd_get_owner = f"stat -c '%u:%g' /data/data/{package_name}"
 
             result = subprocess.run(
-    cmd_get_owner,
-    shell=True,
-    capture_output=True,
-     text=True)
+                cmd_get_owner,
+                shell=True,
+                capture_output=True,
+                text=True)
 
             owner = result.stdout.strip()
-
 
             if owner:
 
@@ -1888,10 +1877,10 @@ class RobloxManager:
                 subprocess.run(cmd_chmod, shell=True)
 
                 subprocess.run(
-    f"restorecon {path}",
-    shell=True,
-    stdout=subprocess.DEVNULL,
-     stderr=subprocess.DEVNULL)
+                    f"restorecon {path}",
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
 
                 return True
 
@@ -1902,7 +1891,6 @@ class RobloxManager:
 
         return False
 
-
     @staticmethod
     def update_app_storage_userid(file_path, user_id):
 
@@ -1912,9 +1900,7 @@ class RobloxManager:
 
                 data = json.load(f)
 
-
             data['UserId'] = str(user_id)
-
 
             with open(file_path, 'w') as f:
 
@@ -1929,7 +1915,6 @@ class RobloxManager:
 
             return False
 
-
     @staticmethod
     def inject_cookies_and_appstorage():
 
@@ -1939,13 +1924,11 @@ class RobloxManager:
 
         appstorage_url = "https://raw.githubusercontent.com/ENMN11/Tool-Rejoin/refs/heads/main/appStorage.json"
 
-
         downloaded_db_path = FileManager.download_file(
             db_url, "Cookies.db", binary=True)
 
         downloaded_appstorage_path = FileManager.download_file(
             appstorage_url, "appStorage.json", binary=False)
-
 
         if not downloaded_db_path or not downloaded_appstorage_path:
 
@@ -1954,7 +1937,6 @@ class RobloxManager:
 
             return
 
-
         packages = RobloxManager.get_roblox_packages()
 
         if not packages:
@@ -1962,7 +1944,6 @@ class RobloxManager:
             print("\033[1;31m[ Shako.dev ] - No Roblox packages detected.\033[0m")
 
             return
-
 
         for package_name in packages:
 
@@ -1976,7 +1957,6 @@ class RobloxManager:
                         f"\033[1;31m[ Shako.dev ] - Failed to retrieve a cookie for {package_name}. Skipping...\033[0m")
 
                     break
-
 
                 user_id = RobloxManager.verify_cookie(cookie)
 
@@ -1992,22 +1972,18 @@ class RobloxManager:
 
                     continue
 
-
                 print(
                     f"\033[1;32m[ Shako.dev ] - Injecting cookie for {package_name}...\033[0m")
-
 
                 destination_db_dir = f"/data/data/{package_name}/app_webview/Default/"
 
                 destination_appstorage_dir = f"/data/data/{package_name}/files/appData/LocalStorage/"
 
-
                 subprocess.run(f"mkdir -p {destination_db_dir}", shell=True)
 
                 subprocess.run(
-    f"mkdir -p {destination_appstorage_dir}",
-     shell=True)
-
+                    f"mkdir -p {destination_appstorage_dir}",
+                    shell=True)
 
                 destination_db_path = os.path.join(
                     destination_db_dir, "Cookies")
@@ -2015,20 +1991,17 @@ class RobloxManager:
                 destination_appstorage_path = os.path.join(
                     destination_appstorage_dir, "appStorage.json")
 
-
                 RobloxManager.update_app_storage_userid(
                     downloaded_appstorage_path, user_id)
 
                 shutil.copyfile(
-    downloaded_appstorage_path,
-     destination_appstorage_path)
-
+                    downloaded_appstorage_path,
+                    destination_appstorage_path)
 
                 shutil.copyfile(downloaded_db_path, destination_db_path)
 
                 RobloxManager.replace_cookie_value_in_db(
                     destination_db_path, cookie)
-
 
                 print(
                     f"\033[1;33m[ Shako.dev ] - Fixing permissions for {package_name}...\033[0m")
@@ -2037,20 +2010,18 @@ class RobloxManager:
                     destination_db_path, package_name)
 
                 RobloxManager.fix_permissions(
-    destination_appstorage_path, package_name)
-
+                    destination_appstorage_path, package_name)
 
                 print(
                     f"\033[1;36m[ Shako.dev ] - Launching {package_name} to check login...\033[0m")
 
                 subprocess.run(
-    f"monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
-    shell=True,
-    stdout=subprocess.DEVNULL,
-     stderr=subprocess.DEVNULL)
+                    f"monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
 
                 time.sleep(5)
-
 
             except Exception as e:
 
@@ -2060,9 +2031,7 @@ class RobloxManager:
 
                 traceback.print_exc()
 
-
         print("\033[1;33m[ Shako.dev ] - Injection & Auto Launch done.\033[0m")
-
 
     @staticmethod
     def replace_cookie_value_in_db(db_path, new_cookie_value):
@@ -2093,7 +2062,6 @@ class RobloxManager:
             print(
                 f"\033[1;31mError replacing cookie value in database: {e}\033[0m")
 
-
     @staticmethod
     def format_server_link(input_link):
 
@@ -2122,7 +2090,6 @@ class ExecutorManager:
 
         detected_executors = []
 
-
         for executor_name, base_path in executors.items():
 
             possible_autoexec_paths = [
@@ -2135,7 +2102,6 @@ class ExecutorManager:
 
             ]
 
-
             for path in possible_autoexec_paths:
 
                 if os.path.exists(path):
@@ -2147,9 +2113,7 @@ class ExecutorManager:
 
                     break
 
-
         return detected_executors
-
 
     @staticmethod
     def write_lua_script(detected_executors):
@@ -2158,13 +2122,11 @@ class ExecutorManager:
 
         config_file = os.path.join("Shako.dev", "checkui.lua")
 
-
         if not os.path.exists(config_file):
 
             with open(config_file, "w") as f:
 
                 f.write(globals()["lua_script_template"] or "")
-
 
         try:
 
@@ -2178,7 +2140,6 @@ class ExecutorManager:
                 f"[bold red][ Shako.dev ] - Error reading config from {config_file}: {e}[/bold red]")
 
             return
-
 
         for executor_name in detected_executors:
 
@@ -2194,13 +2155,11 @@ class ExecutorManager:
 
             ]
 
-
             lua_written = False
 
             if executor_name.upper() == "KRNL":
 
                 pass
-
 
             if not lua_written:
 
@@ -2229,18 +2188,16 @@ class ExecutorManager:
                             console.print(
                                 f"[bold red][ Shako.dev ] - Error writing Lua script to {lua_script_path}: {e}[/bold red]")
 
-
             if not lua_written:
 
                 console.print(
                     f"[bold yellow][ Shako.dev ] - No valid path found to write Lua script for {executor_name}[/bold yellow]")
 
-
     @staticmethod
     def check_executor_status(
-    package_name,
-    continuous=True,
-     max_wait_time=240):
+            package_name,
+            continuous=True,
+            max_wait_time=240):
 
         retry_timeout = time.time() + max_wait_time
 
@@ -2261,7 +2218,6 @@ class ExecutorManager:
                 return False
 
             time.sleep(10)
-
 
     @staticmethod
     def reset_executor_file(package_name):
@@ -2300,7 +2256,6 @@ class WebhookManager:
 
             webhook_thread.start()
 
-
     @staticmethod
     def send_webhook():
 
@@ -2318,7 +2273,6 @@ class WebhookManager:
 
                     continue
 
-
                 info = SystemMonitor.get_system_info()
 
                 if not info:
@@ -2326,7 +2280,6 @@ class WebhookManager:
                     time.sleep(60)
 
                     continue
-
 
                 cpu = f"{info['cpu_usage']:.1f}%"
 
@@ -2340,16 +2293,15 @@ class WebhookManager:
 
                 roblox_count = len(info['roblox_packages'])
 
-                roblox_status = f"Running: {roblox_count} instance{'s' if roblox_count != 1 else ''}"
+                roblox_status = f"Running: {roblox_count} instance{
+                    's' if roblox_count != 1 else ''}"
 
                 roblox_details = "\n".join(
-    info['roblox_packages']) if info['roblox_packages'] else "None"
-
+                    info['roblox_packages']) if info['roblox_packages'] else "None"
 
                 tool_mem_usage = SystemMonitor.get_memory_usage()
 
                 tool_mem_display = f"{tool_mem_usage} MB" if tool_mem_usage is not None else "Unavailable"
-
 
                 if roblox_count > 0:
 
@@ -2359,9 +2311,7 @@ class WebhookManager:
 
                     status_text = "🔴 Offline"
 
-
                 random_color = random.randint(0, 16777215)
-
 
                 embed = {
 
@@ -2411,22 +2361,20 @@ class WebhookManager:
 
                 }
 
-
                 with open(screenshot_path, "rb") as file:
 
                     response = requests.post(
-    webhook_url,
-    data={
-        "payload_json": json.dumps(
-            {
-                "embeds": [embed],
-                "username": "Shako.dev",
-                "avatar_url": "https://i.imgur.com/5yXNxU4.png"})},
-                files={
-                    "file": (
-                        "screenshot.png",
-                         file)} )
-
+                        webhook_url,
+                        data={
+                            "payload_json": json.dumps(
+                                {
+                                    "embeds": [embed],
+                                    "username": "Shako.dev",
+                                    "avatar_url": "https://i.imgur.com/5yXNxU4.png"})},
+                        files={
+                            "file": (
+                                "screenshot.png",
+                                file)})
 
                 if response.status_code not in (200, 204):
 
@@ -2434,8 +2382,8 @@ class WebhookManager:
                         f"\033[1;31m[ Shako.dev ] - Error sending device info: {response.status_code}\033[0m")
 
                     Utilities.log_error(
-                        f"Error sending webhook: Status code {response.status_code}")
-
+                        f"Error sending webhook: Status code {
+                            response.status_code}")
 
             except Exception as e:
 
@@ -2443,9 +2391,7 @@ class WebhookManager:
 
                 Utilities.log_error(f"Error in webhook thread: {e}")
 
-
             time.sleep(webhook_interval * 60)
-
 
     @staticmethod
     def stop_webhook():
@@ -2453,7 +2399,6 @@ class WebhookManager:
         global stop_webhook_thread
 
         stop_webhook_thread = True
-
 
     @staticmethod
     def setup_webhook():
@@ -2497,18 +2442,15 @@ class PackageMonitor:
 
         self.user_id = user_id
 
-
         self.stop_event = Event()
 
         self.ready_event = Event()
 
         self.thread = None
 
-
         self.last_seen_time = time.time()
 
         self.is_first_load = True
-
 
     def start(self):
 
@@ -2522,18 +2464,15 @@ class PackageMonitor:
 
             self.is_first_load = True
 
-
             ExecutorManager.reset_executor_file(self.package_name)
 
-
             self.thread = threading.Thread(
-    target=self._monitor_loop, daemon=True)
+                target=self._monitor_loop, daemon=True)
 
             self.thread.start()
 
             print(
                 f"\033[1;35m[ Shako.dev ] - Monitor thread started for {self.package_name}\033[0m")
-
 
     def stop(self):
 
@@ -2546,21 +2485,20 @@ class PackageMonitor:
         print(
             f"\033[1;31m[ Shako.dev ] - Monitor thread stopped for {self.package_name}\033[0m")
 
-
     def wait_for_ready(self, timeout=240):
 
         print(
-            f"\033[1;33m[ Shako.dev ] - Waiting for executor signal from {self.package_name} (Timeout: {timeout}s)...\033[0m")
+            f"\033[1;33m[ Shako.dev ] - Waiting for executor signal from {
+                self.package_name} (Timeout: {timeout}s)...\033[0m")
 
         with status_lock:
 
             if self.package_name in globals()["package_statuses"]:
 
                 globals()[
-                        "package_statuses"][self.package_name]["Status"] = "\033[1;33mWaiting for Executor...\033[0m"
+                    "package_statuses"][self.package_name]["Status"] = "\033[1;33mWaiting for Executor...\033[0m"
 
                 UIManager.update_status_table()
-
 
         if not self.ready_event.wait(timeout=timeout):
 
@@ -2572,18 +2510,16 @@ class PackageMonitor:
                 if self.package_name in globals()["package_statuses"]:
 
                     globals()[
-                            "package_statuses"][self.package_name]["Status"] = "\033[1;31mExecutor Timeout!\033[0m"
+                        "package_statuses"][self.package_name]["Status"] = "\033[1;31mExecutor Timeout!\033[0m"
 
                     UIManager.update_status_table()
 
             return False
 
-
         print(
             f"\033[1;32m[ Shako.dev ] - Executor signal RECEIVED from {self.package_name}.\033[0m")
 
         return True
-
 
     def _monitor_loop(self):
 
@@ -2593,11 +2529,10 @@ class PackageMonitor:
 
                 file_found = False
 
-
                 for workspace in globals()["workspace_paths"]:
 
                     check_path = os.path.join(
-    workspace, f"{self.user_id}.main")
+                        workspace, f"{self.user_id}.main")
 
                     if os.path.exists(check_path):
 
@@ -2613,9 +2548,7 @@ class PackageMonitor:
 
                         break
 
-
                 current_time = time.time()
-
 
                 if file_found:
 
@@ -2625,54 +2558,47 @@ class PackageMonitor:
 
                         self.is_first_load = False
 
-
                     self.last_seen_time = current_time
-
 
                     msg = "\033[1;32mExecutor Active (Monitoring)\033[0m"
 
                     with status_lock:
 
                         if self.package_name in globals()["package_statuses"] and globals()[
-                                                        "package_statuses"][self.package_name]["Status"] != msg:
+                                "package_statuses"][self.package_name]["Status"] != msg:
 
                             globals()[
-                                    "package_statuses"][self.package_name]["Status"] = msg
+                                "package_statuses"][self.package_name]["Status"] = msg
 
                             UIManager.update_status_table()
 
-
                     self.stop_event.wait(20)
-
 
                 else:
 
                     elapsed_time = current_time - self.last_seen_time
 
-
                     if elapsed_time > 240:
 
                         print(
-                            f"\033[1;31m[ Shako.dev ] - {self.package_name}: Executor crash detected (No signal for 240s). Restarting...\033[0m")
-
+                            f"\033[1;31m[ Shako.dev ] - {
+                                self.package_name}: Executor crash detected (No signal for 240s). Restarting...\033[0m")
 
                         with status_lock:
 
                             if self.package_name in globals()[
-                                                            "package_statuses"]:
+                                    "package_statuses"]:
 
                                 globals()[
-                                        "package_statuses"][self.package_name]["Status"] = "\033[1;31mCrash Detected -> Restarting...\033[0m"
+                                    "package_statuses"][self.package_name]["Status"] = "\033[1;31mCrash Detected -> Restarting...\033[0m"
 
                                 UIManager.update_status_table()
-
 
                         with rejoin_lock:
 
                             if self.stop_event.is_set():
 
                                 break
-
 
                             RobloxManager.kill_roblox_process(
                                 self.package_name)
@@ -2682,10 +2608,8 @@ class PackageMonitor:
 
                             time.sleep(5)
 
-
                             ExecutorManager.reset_executor_file(
                                 self.package_name)
-
 
                             print(
                                 f"\033[1;33m[ Shako.dev ] - Re-launching {self.package_name}...\033[0m")
@@ -2693,34 +2617,31 @@ class PackageMonitor:
                             RobloxManager.launch_roblox(
                                 self.package_name, self.server_link)
 
-
                             self.last_seen_time = time.time()
 
                             self.is_first_load = True
 
-
                     else:
 
-                        status_msg = f"\033[1;33mNo signal: {int(elapsed_time)}s/240s\033[0m"
+                        status_msg = f"\033[1;33mNo signal: {
+                            int(elapsed_time)}s/240s\033[0m"
 
                         if not self.is_first_load:
 
-                            status_msg = f"\033[1;33mExecutor Idle/Crash? {int(elapsed_time)}s/240s\033[0m"
-
+                            status_msg = f"\033[1;33mExecutor Idle/Crash? {
+                                int(elapsed_time)}s/240s\033[0m"
 
                         with status_lock:
 
                             if self.package_name in globals()[
-                                                            "package_statuses"]:
+                                    "package_statuses"]:
 
                                 globals()[
-                                        "package_statuses"][self.package_name]["Status"] = status_msg
+                                    "package_statuses"][self.package_name]["Status"] = status_msg
 
                                 UIManager.update_status_table()
 
-
                         self.stop_event.wait(10)
-
 
             except Exception as e:
 
@@ -2728,10 +2649,11 @@ class PackageMonitor:
                     f"\033[1;31m[ Shako.dev ] - Error in monitor loop for {self.package_name}: {e}\033[0m")
 
                 Utilities.log_error(
-                    f"Error in monitor loop for {self.package_name}: {e}\n{traceback.format_exc()}")
+                    f"Error in monitor loop for {
+                        self.package_name}: {e}\n{
+                        traceback.format_exc()}")
 
                 self.stop_event.wait(10)
-
 
         print(
             f"\033[1;31m[ Shako.dev ] - Monitor loop for {self.package_name} terminated.\033[0m")
@@ -2741,9 +2663,9 @@ class Runner:
 
     @staticmethod
     def launch_package_sequentially(
-    server_links,
-    package_monitors,
-     main_stop_event):
+            server_links,
+            package_monitors,
+            main_stop_event):
 
         packages_to_launch = []
 
@@ -2772,12 +2694,10 @@ class Runner:
 
             packages_to_launch.append((package_name, server_link, user_id))
 
-
         total_packages = len(packages_to_launch)
 
         for index, (package_name, server_link,
                     user_id) in enumerate(packages_to_launch):
-
 
             if main_stop_event.is_set():
 
@@ -2786,24 +2706,21 @@ class Runner:
 
                 break
 
-
             with rejoin_lock:
 
                 print(
-                    f"\033[1;32m[ Shako.dev ] - Launching package {index + 1}/{total_packages}: {package_name}\033[0m")
-
+                    f"\033[1;32m[ Shako.dev ] - Launching package {
+                        index + 1}/{total_packages}: {package_name}\033[0m")
 
                 try:
 
                     RobloxManager.launch_roblox(package_name, server_link)
-
 
                     if globals()["check_exec_enable"] == "1":
 
                         if package_name in package_monitors:
 
                             package_monitors[package_name].stop()
-
 
                         detected_executors = ExecutorManager.detect_executors()
 
@@ -2813,7 +2730,7 @@ class Runner:
                                 f"\033[1;41m[ Shako.dev ] - NO EXECUTOR DETECTED FOR {package_name}! EXITING TOOL.\033[0m")
 
                             globals()[
-                                    "package_statuses"][package_name]["Status"] = "\033[1;31mNO EXECUTOR - EXITING\033[0m"
+                                "package_statuses"][package_name]["Status"] = "\033[1;31mNO EXECUTOR - EXITING\033[0m"
 
                             UIManager.update_status_table()
 
@@ -2826,28 +2743,23 @@ class Runner:
                             ExecutorManager.write_lua_script(
                                 detected_executors)
 
-
                         monitor = PackageMonitor(
-    package_name, server_link, user_id)
+                            package_name, server_link, user_id)
 
                         package_monitors[package_name] = monitor
 
                         monitor.start()
-
 
                         if not monitor.wait_for_ready():
 
                             print(
                                 f"\033[1;31m[ Shako.dev ] - Executor for {package_name} failed to load. Check logs. Continuing to next package...\033[0m")
 
-
                         time.sleep(5)
-
 
                     else:
 
                         time.sleep(10)
-
 
                 except Exception as e:
 
@@ -2855,13 +2767,13 @@ class Runner:
                         f"\033[1;31mError launching Roblox for {package_name}: {e}\033[0m")
 
                     globals()[
-                            "package_statuses"][package_name]["Status"] = "\033[1;31mLaunch failed\033[0m"
+                        "package_statuses"][package_name]["Status"] = "\033[1;31mLaunch failed\033[0m"
 
                     UIManager.update_status_table()
 
                     Utilities.log_error(
-                        f"Error in launch_package_sequentially for {package_name}: {e}\n{traceback.format_exc()}")
-
+                        f"Error in launch_package_sequentially for {package_name}: {e}\n{
+                            traceback.format_exc()}")
 
     @staticmethod
     def monitor_presence(server_links, stop_event):
@@ -2870,11 +2782,9 @@ class Runner:
 
             return
 
-
         in_game_status = {
-    package_name: False for package_name,
-     _ in server_links}
-
+            package_name: False for package_name,
+            _ in server_links}
 
         while not stop_event.is_set():
 
@@ -2886,26 +2796,22 @@ class Runner:
 
                         break
 
-
                     ckhuy = FileManager.xuat(
                         f"/data/data/{package_name}/app_webview/Default/Cookies")
 
                     user_id = globals()["_user_"][package_name]
 
-
                     presence_type = RobloxManager.check_user_online(
                         user_id, ckhuy)
-
 
                     if presence_type != 2:
 
                         with status_lock:
 
                             globals()[
-                                    "package_statuses"][package_name]["Status"] = "\033[1;31mOffline Detected. Rejoining...\033[0m"
+                                "package_statuses"][package_name]["Status"] = "\033[1;31mOffline Detected. Rejoining...\033[0m"
 
                             UIManager.update_status_table()
-
 
                         with rejoin_lock:
 
@@ -2927,10 +2833,9 @@ class Runner:
                         with status_lock:
 
                             globals()[
-                                    "package_statuses"][package_name]["Status"] = "\033[1;32mIn-Game (Online Check)\033[0m"
+                                "package_statuses"][package_name]["Status"] = "\033[1;32mIn-Game (Online Check)\033[0m"
 
                             UIManager.update_status_table()
-
 
                 stop_event.wait(240)
 
@@ -2940,13 +2845,12 @@ class Runner:
                     f"\033[1;31m[ Shako.dev ] - Error in presence monitor: {e}\033[0m")
 
                 Utilities.log_error(
-                    f"Error in presence monitor: {e}\n{traceback.format_exc()}")
+                    f"Error in presence monitor: {e}\n{
+                        traceback.format_exc()}")
 
                 stop_event.wait(240)
 
-
         print("\033[1;31m[ Shako.dev ] - Presence monitor terminated.\033[0m")
-
 
     @staticmethod
     def force_rejoin(server_links, interval, stop_event, package_monitors):
@@ -2956,18 +2860,15 @@ class Runner:
         force_rejoin_interval = float(interval) if interval and isinstance(
             interval, (int, float)) else float('inf')
 
-
         while not stop_event.is_set():
 
             current_time = time.time()
 
             if force_rejoin_interval != float('inf') and (
-    current_time - start_time >= force_rejoin_interval):
+                    current_time - start_time >= force_rejoin_interval):
 
                 print(
                     "\033[1;31m[ Shako.dev ] - Force killing Roblox processes due to time limit.\033[0m")
-
-
 
                 with rejoin_lock:
 
@@ -2980,7 +2881,6 @@ class Runner:
 
                     package_monitors.clear()
 
-
                     RobloxManager.kill_roblox_processes()
 
                     start_time = time.time()
@@ -2990,10 +2890,8 @@ class Runner:
 
                     time.sleep(5)
 
-
                     Runner.launch_package_sequentially(
-    server_links, package_monitors, stop_event)
-
+                        server_links, package_monitors, stop_event)
 
             wait_time = max(
                 0, min(600, force_rejoin_interval - (time.time() - start_time)))
@@ -3002,12 +2900,9 @@ class Runner:
 
                 wait_time = 600
 
-
             stop_event.wait(wait_time)
 
-
         print("\033[1;31m[ Shako.dev ] - Force rejoin monitor terminated.\033[0m")
-
 
     @staticmethod
     def update_status_table_periodically():
@@ -3018,7 +2913,6 @@ class Runner:
 
             time.sleep(30)
 
-
     @staticmethod
     def logout_all_packages():
 
@@ -3026,17 +2920,14 @@ class Runner:
 
         packages = RobloxManager.get_roblox_packages()
 
-
         if not packages:
 
             print("\033[1;31m[ Shako.dev ] - No Roblox packages found!\033[0m")
 
             return
 
-
         print(
             f"\033[1;33m[ Shako.dev ] - Found {len(packages)} packages. Cleaning data...\033[0m")
-
 
         for package_name in packages:
 
@@ -3044,13 +2935,11 @@ class Runner:
 
                 RobloxManager.kill_roblox_process(package_name)
 
-
                 cookie_path = f"/data/data/{package_name}/app_webview/Default/Cookies"
 
                 cookie_journal = f"/data/data/{package_name}/app_webview/Default/Cookies-journal"
 
                 app_storage_path = f"/data/data/{package_name}/files/appData/LocalStorage/appStorage.json"
-
 
                 subprocess.run(
 
@@ -3062,16 +2951,13 @@ class Runner:
 
                 )
 
-
                 print(
                     f"\033[1;32m[ Shako.dev ] - Logged out {package_name} (Deleted Cookies & appStorage)\033[0m")
-
 
             except Exception as e:
 
                 print(
                     f"\033[1;31m[ Shako.dev ] - Error logging out {package_name}: {e}\033[0m")
-
 
         print("\033[1;33m[ Shako.dev ] - Logout Process Completed.\033[0m")
 
@@ -3086,7 +2972,7 @@ def set_android_id(android_id):
     try:
 
         subprocess.run(["settings", "put", "secure",
-                       "android_id", android_id], check=True)
+                        "android_id", android_id], check=True)
 
     except Exception as e:
 
@@ -3112,14 +2998,11 @@ def main():
 
     global auto_android_id_enabled, auto_android_id_thread, auto_android_id_value
 
-
     if not check_activation_status():
 
         return
 
-
     FileManager._load_config()
-
 
     if not globals().get("command_8_configured", False):
 
@@ -3143,7 +3026,6 @@ def main():
 
         FileManager.save_config()
 
-
     if webhook_interval is None:
 
         webhook_interval = float('inf')
@@ -3152,13 +3034,11 @@ def main():
 
         WebhookManager.start_webhook_thread()
 
-
     monitoring_threads = []
 
     main_stop_event = threading.Event()
 
     package_monitors = {}
-
 
     while True:
 
@@ -3167,7 +3047,6 @@ def main():
         UIManager.print_header(version)
 
         FileManager.check_and_create_cookie_file()
-
 
         menu_options = [
 
@@ -3191,11 +3070,9 @@ def main():
 
         ]
 
-
         UIManager.create_dynamic_menu(menu_options)
 
         setup_type = input("\033[1;93m[ Shako.dev ] - Enter command: \033[0m")
-
 
         if setup_type == "1":
 
@@ -3212,7 +3089,6 @@ def main():
 
                 monitoring_threads.clear()
 
-
                 for monitor in package_monitors.values():
 
                     monitor.stop()
@@ -3221,14 +3097,11 @@ def main():
 
                 print("\033[1;32m[ Shako.dev ] - All tasks stopped.\033[0m")
 
-
                 main_stop_event.clear()
-
 
                 FileManager.setup_user_ids()
 
                 globals()["accounts"] = FileManager.load_accounts()
-
 
                 if not globals()["accounts"]:
 
@@ -3239,11 +3112,9 @@ def main():
 
                     continue
 
-
                 server_links = FileManager.load_server_links()
 
                 globals()["_uid_"] = {}
-
 
                 if not server_links:
 
@@ -3254,40 +3125,35 @@ def main():
 
                     continue
 
-
                 force_rejoin_input = input(
                     "\033[1;93m[ Shako.dev ] - Force rejoin interval (minutes, 'q' to skip): \033[0m")
 
                 force_rejoin_interval = float('inf') if force_rejoin_input.lower(
                 ) == 'q' else int(force_rejoin_input) * 60
 
-
                 RobloxManager.kill_roblox_processes()
 
                 time.sleep(3)
 
-
                 print(
                     "\033[1;32m[ Shako.dev ] - Starting background monitoring services...\033[0m")
 
-
                 tasks_to_start = [
-    (Runner.monitor_presence,
-    (server_links,
-    main_stop_event)),
-    (Runner.force_rejoin,
-    (server_links,
-    force_rejoin_interval,
-    main_stop_event,
-    package_monitors)),
-    (Runner.update_status_table_periodically,
-     ()) ]
-
+                    (Runner.monitor_presence,
+                     (server_links,
+                      main_stop_event)),
+                    (Runner.force_rejoin,
+                     (server_links,
+                      force_rejoin_interval,
+                      main_stop_event,
+                      package_monitors)),
+                    (Runner.update_status_table_periodically,
+                     ())]
 
                 for target_func, args in tasks_to_start:
 
                     t = threading.Thread(
-    target=target_func, args=args, daemon=True)
+                        target=target_func, args=args, daemon=True)
 
                     t.start()
 
@@ -3295,16 +3161,13 @@ def main():
 
                         monitoring_threads.append(t)
 
-
                 Runner.launch_package_sequentially(
-    server_links, package_monitors, main_stop_event)
+                    server_links, package_monitors, main_stop_event)
 
                 globals()["is_runner_ez"] = True
 
-
                 print(
                     "\033[1;32m[ Shako.dev ] - All initial launches complete. Continuous monitoring is now active.\033[0m")
-
 
                 while not main_stop_event.is_set():
 
@@ -3312,10 +3175,8 @@ def main():
 
                     Utilities.collect_garbage()
 
-
                 print(
                     "\033[1;31m[ Shako.dev ] - Monitoring has been stopped. Returning to main menu.\033[0m")
-
 
             except Exception as e:
 
@@ -3328,7 +3189,6 @@ def main():
 
                 continue
 
-
         elif setup_type == "2":
 
             try:
@@ -3339,7 +3199,6 @@ def main():
                 packages = RobloxManager.get_roblox_packages()
 
                 accounts = []
-
 
                 for package_name in packages:
 
@@ -3369,7 +3228,6 @@ def main():
                         Utilities.log_error(
                             f"Error reading appStorage.json for {package_name}: {e}")
 
-
                 if accounts:
 
                     FileManager.save_accounts(accounts)
@@ -3384,48 +3242,45 @@ def main():
 
                     continue
 
-
                 print("\033[93m[ Shako.dev ] - Select game:\033[0m")
 
                 games = [
-    "1. Blox Fruits",
-    "2. Grow A Garden",
-    "3. King Legacy",
-    "4. Fisch",
-    "5. Bee Swarm Simulator",
-    "6. Anime Last Stand",
-    "7. Dead Rails Alpha",
-    "8. All Star Tower Defense X",
-    "9. 99 Nights In The Forest",
-    "10. Murder Mystery 2",
-    "11. Steal A Brainrot",
-    "12. Blue Lock Rivals",
-    "13. Arise Crossover",
-     "14. Other game or Private Server Link" ]
+                    "1. Blox Fruits",
+                    "2. Grow A Garden",
+                    "3. King Legacy",
+                    "4. Fisch",
+                    "5. Bee Swarm Simulator",
+                    "6. Anime Last Stand",
+                    "7. Dead Rails Alpha",
+                    "8. All Star Tower Defense X",
+                    "9. 99 Nights In The Forest",
+                    "10. Murder Mystery 2",
+                    "11. Steal A Brainrot",
+                    "12. Blue Lock Rivals",
+                    "13. Arise Crossover",
+                    "14. Other game or Private Server Link"]
 
                 for game in games:
 
                     print(f"\033[96m{game}\033[0m")
 
-
                 choice = input(
                     "\033[93m[ Shako.dev ] - Enter choice: \033[0m").strip()
 
                 game_ids = {
-    "1": "2753915549",
-    "2": "126884695634066",
-    "3": "4520749081",
-    "4": "16732694052",
-    "5": "1537690962",
-    "6": "12886143095",
-    "7": "116495829188952",
-    "8": "17687504411",
-    "9": "79546208627805",
-    "10": "142823291",
-    "11": "109983668079237",
-    "12": "18668065416",
-     "13": "87039211657390" }
-
+                    "1": "2753915549",
+                    "2": "126884695634066",
+                    "3": "4520749081",
+                    "4": "16732694052",
+                    "5": "1537690962",
+                    "6": "12886143095",
+                    "7": "116495829188952",
+                    "8": "17687504411",
+                    "9": "79546208627805",
+                    "10": "142823291",
+                    "11": "109983668079237",
+                    "12": "18668065416",
+                    "13": "87039211657390"}
 
                 if choice in game_ids:
 
@@ -3444,13 +3299,12 @@ def main():
 
                     continue
 
-
                 formatted_link = RobloxManager.format_server_link(server_link)
 
                 if formatted_link:
 
                     server_links = [(package_name, formatted_link)
-                                     for package_name, _ in accounts]
+                                    for package_name, _ in accounts]
 
                     FileManager.save_server_links(server_links)
 
@@ -3459,18 +3313,15 @@ def main():
                     print(
                         "\033[1;31m[ Shako.dev ] - Invalid server link.\033[0m")
 
-
             except Exception as e:
 
                 print(f"\033[1;31m[ Shako.dev ] - Error: {e}\033[0m")
 
                 Utilities.log_error(f"Setup error: {e}")
 
-
             input("\033[1;32mPress Enter to return...\033[0m")
 
             continue
-
 
         elif setup_type == "3":
 
@@ -3480,7 +3331,6 @@ def main():
 
             continue
 
-
         elif setup_type == "4":
 
             WebhookManager.setup_webhook()
@@ -3488,7 +3338,6 @@ def main():
             input("\033[1;32m\nPress Enter to exit...\033[0m")
 
             continue
-
 
         elif setup_type == "5":
 
@@ -3499,7 +3348,6 @@ def main():
 
                 config_choice = input(
                     "\033[1;93m[ Shako.dev ] - Select check method (1-2, 'q' to keep default): \033[0m").strip()
-
 
                 if config_choice.lower() == "q":
 
@@ -3536,7 +3384,6 @@ def main():
                     globals()["check_exec_enable"] = "1"
 
                     globals()["lua_script_template"] = 'if not game:IsLoaded() then game.Loaded:Wait() end local f = tostring(game.Players.LocalPlayer.UserId)..".main" local c = "https://discord.gg/FcEGmkNDDe" local function w() local g = pcall(writefile, f, c) if not g then game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer) end end task.spawn(function() w() while true do task.wait(5) w() end end)'
-
 
                 config_file = os.path.join("Shako.dev", "checkui.lua")
 
@@ -3580,9 +3427,7 @@ def main():
                             Utilities.log_error(
                                 f"Error removing {config_file}: {e}")
 
-
                 globals()["command_8_configured"] = True
-
 
                 FileManager.save_config()
 
@@ -3604,7 +3449,6 @@ def main():
 
             continue
 
-
         elif setup_type == "6":
 
             try:
@@ -3616,7 +3460,6 @@ def main():
 
                 new_prefix = input(
                     "\033[1;93m[ Shako.dev ] - Enter new package prefix (or press Enter to keep current): \033[0m").strip()
-
 
                 if new_prefix:
 
@@ -3642,7 +3485,6 @@ def main():
 
             continue
 
-
         elif setup_type == "7":
 
             try:
@@ -3652,7 +3494,6 @@ def main():
 
                 choice = input(
                     "\033[1;93m[ Shako.dev ] - Select option: \033[0m").strip()
-
 
                 if choice == "1":
 
@@ -3699,7 +3540,6 @@ def main():
 
             continue
 
-
         elif setup_type == "8":
 
             try:
@@ -3712,10 +3552,10 @@ def main():
                 for package_name in packages:
 
                     subprocess.run(
-    f"monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
-    shell=True,
-    stdout=subprocess.DEVNULL,
-     stderr=subprocess.DEVNULL)
+                        f"monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
+                        shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
 
                     print(
                         f"\033[1;36m[ Shako.dev ] - Launched {package_name}\033[0m")
@@ -3734,7 +3574,6 @@ def main():
 
             continue
 
-
         elif setup_type == "9":
 
             Runner.logout_all_packages()
@@ -3742,7 +3581,6 @@ def main():
             input("\033[1;32mPress Enter to return...\033[0m")
 
             continue
-
 
         else:
 
