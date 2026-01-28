@@ -1,4 +1,4 @@
-"# panel
+# panel
 
 ## Formatação Automática de Código / Automatic Code Formatting
 
@@ -21,4 +21,3 @@ python3 -m py_compile shoko.py
 
 ### Configuração do Editor
 Este projeto inclui um arquivo `.editorconfig` para manter a consistência de formatação. Muitos editores suportam EditorConfig automaticamente.
-" 
