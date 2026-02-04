@@ -1,212 +1,349 @@
 #!/usr/bin/env python3
-import subprocess, time, cv2, numpy as np, requests, os
+"""
+🖥️ Roblox AutoRejoin - Hacker Theme Ultimate 🖥️
+Interface cyberpunk com Visão Computacional e Auto Key System
+Versão: 5.0 - AI Integrated
+"""
+
+import os
+import sys
+import time
+import json
+import signal
+import subprocess
+import requests
+import cv2
+import numpy as np
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
-# --- CONFIGURAÇÕES ---
-VIP_LINK = "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M"
-WEBHOOK_DISCORD = "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M"
-KEY_API_URL = "http://127.0.0.1:3000/get_key" # Onde seu bot local hospeda a key
+# ============================================
+# 🎮 CONFIGURAÇÃO
+# ============================================
+CONFIG_FILE = "hacker_config.json"
 TEMPLATES_DIR = "templates"
-THRESHOLD = 0.85 # Precisão da busca de imagem (0.8 = 80%)
+KEY_API_URL = "http://127.0.0.1:3000/get_key" # Ajuste se necessário
 
-# Variáveis Globais de Estado
-last_screen_hash = None
-last_screen_time = time.time()
-current_package_index = 0
+DEFAULT_CONFIG = {
+    "web_link": "https://www.roblox.com/games/1537690962/Bee-Swarm-Simulator?privateServerLinkCode=54979473479340063836604255875447",
+    "webhook_url": "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M",
+    "check_interval": 5,
+    "low_cpu_threshold": 8.0,
+    "max_lowcpu_time": 10,
+    "cooldown_time": 15,
+    "packages": [],
+    "threshold": 0.85
+}
 
-def log(tag, msg):
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] [{tag}] {msg}")
-
-# --- ADB WRAPPER ---
-def adb(cmd_str):
-    try:
-        # Executa comandos adb shell
-        cmd = f"adb {cmd_str}"
-        res = subprocess.run(cmd.split(), capture_output=True, timeout=10)
-        return res.stdout
-    except:
-        return b""
-
-def get_installed_roblox():
-    # Busca pacotes originais e clones comuns
-    raw = adb("shell pm list packages")
-    packages = []
-    for line in raw.decode().splitlines():
-        pkg = line.replace("package:", "").strip()
-        if "roblox" in pkg.lower():
-            packages.append(pkg)
-    if not packages:
-        log("ERRO", "Nenhum Roblox encontrado!")
-    else:
-        log("SYSTEM", f"Roblox detectados: {packages}")
-    return packages
-
-# --- VISÃO COMPUTACIONAL ---
-def screenshot():
-    raw = adb("exec-out screencap -p")
-    if not raw:
-        return None
-    arr = np.frombuffer(raw, np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    return img
-
-def find_click(screen, template_name):
-    path = os.path.join(TEMPLATES_DIR, template_name)
-    if not os.path.exists(path):
-        return False
-        
-    tpl = cv2.imread(path)
-    if tpl is None: return False
-
-    res = cv2.matchTemplate(screen, tpl, cv2.TM_CCOEFF_NORMED)
-    _, max_val, _, max_loc = cv2.minMaxLoc(res)
-
-    if max_val >= THRESHOLD:
-        h, w = tpl.shape[:2]
-        cx = max_loc[0] + w // 2
-        cy = max_loc[1] + h // 2
-        log("CLICK", f"Clicando em {template_name} ({max_val:.2f})")
-        adb(f"shell input tap {cx} {cy}")
-        return True
-    return False
-
-# --- FUNÇÕES DE CHECK ---
-def check_freeze(screen):
-    global last_screen_hash, last_screen_time
+# ============================================
+# 🎨 TEMA HACKER CYBERPUNK
+# ============================================
+class HackerTheme:
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
     
-    # Reduz a imagem para comparar rápido
-    small = cv2.resize(screen, (50, 50))
-    current_hash = hash(small.tobytes())
-
-    if current_hash == last_screen_hash:
-        if time.time() - last_screen_time > 60: # 60 segundos sem mudar nada
-            log("FREEZE", "Tela congelada detectada!")
-            return True
-    else:
-        last_screen_hash = current_hash
-        last_screen_time = time.time()
+    # Cores
+    MATRIX = "\033[38;5;46m"
+    CYAN = "\033[38;5;51m"
+    PINK = "\033[38;5;201m"
+    PURPLE = "\033[38;5;93m"
+    BLUE = "\033[38;5;39m"
+    ORANGE = "\033[38;5;208m"
+    RED = "\033[38;5;196m"
+    YELLOW = "\033[38;5;226m"
+    GREEN_DARK = "\033[38;5;22m"
+    GREEN_NEON = "\033[38;5;82m"
     
-    return False
+    # Ícones
+    SYMBOLS = {
+        "terminal": "⌘", "pointer": "▶", "warning": "⚠", "key": "🔑", 
+        "eye": "👁️", "brain": "🧠", "skull": "💀", "check": "✓"
+    }
 
-def get_clipboard_link():
-    # Tenta pegar link via Termux API (mais confiável) ou logcat
-    try:
-        # Método 1: Termux API (Requer pkg install termux-api e app instalado)
-        res = subprocess.run(["termux-clipboard-get"], capture_output=True, timeout=3)
-        text = res.stdout.decode().strip()
-        if "http" in text: return text
-    except:
-        pass
-    
-    # Método 2: Fallback simples (pode não funcionar no Android 10+)
-    return ""
+# ============================================
+# 🎨 INTERFACE HACKER
+# ============================================
+class HackerUI:
+    @staticmethod
+    def clear_screen():
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-# --- LÓGICA PRINCIPAL (STATE MACHINE) ---
+    @staticmethod
+    def print_matrix_banner():
+        print(f"{HackerTheme.MATRIX}")
+        print("╔══════════════════════════════════════════════════════════════╗")
+        print("║  █▀█░█▀█░█▀▄░█░░░█▀█░█░█░░░█▀▄▀█░█▀█░█▀▄░█▀▀░█▀▄  ║")
+        print("║  █▀▄░█░█░█▀▄░█░░░█░█░▄▀▄░░░█░▀░█░█░█░█░█░█▀▀░█▀▄  ║")
+        print("║  ▀░▀░▀▀▀░▀▀░░▀▀▀░▀▀▀░▀░▀░░░▀░░░▀░▀▀▀░▀▀░░▀▀▀░▀░▀  ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print(f"║  {HackerTheme.PINK}v5.0 • AI VISION • AUTO KEY SYSTEM ACTIVATED        {HackerTheme.MATRIX}║")
+        print("╚══════════════════════════════════════════════════════════════╝")
+        print(f"{HackerTheme.RESET}")
 
-def resolver_key_system(screen):
-    # 1. Detectou botão Receive Key?
-    if find_click(screen, "receive_key.png"):
-        log("KEY", "Iniciando processo de Key...")
-        time.sleep(5) # Espera abrir navegador
+    @staticmethod
+    def print_log_entry(tag: str, message: str, level: str = "INFO"):
+        colors = {
+            "INFO": HackerTheme.CYAN, "WARN": HackerTheme.YELLOW,
+            "ERROR": HackerTheme.RED, "SUCCESS": HackerTheme.GREEN_NEON,
+            "KEY": HackerTheme.PINK, "VISION": HackerTheme.PURPLE
+        }
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        color = colors.get(level, HackerTheme.CYAN)
+        print(f"{HackerTheme.GREEN_DARK}[{timestamp}] "
+              f"[{color}{tag:<8}{HackerTheme.GREEN_DARK}] "
+              f"{HackerTheme.RESET}{message}")
+
+# ============================================
+# 🧠 MONITOR INTELIGENTE (OPENCV + ADB)
+# ============================================
+class HackerMonitor:
+    def __init__(self, config: dict):
+        self.config = config
+        self.running = True
+        self.lowcpu_count: Dict[str, int] = {}
+        self.last_screen_hash = None
+        self.last_screen_time = time.time()
         
-        # Fecha navegador para garantir foco
-        adb("shell am force-stop com.android.chrome")
-        time.sleep(1)
-        
-        link = get_clipboard_link()
-        if not link:
-            log("KEY", "Link não encontrado no clipboard. Tentando clicar novamente...")
-            return True # Retorna para tentar de novo
-            
-        log("KEY", f"Link capturado: {link[:30]}...")
-        
-        # Envia para Discord/Bypass
+        # Cria pasta de templates se não existir
+        if not os.path.exists(TEMPLATES_DIR):
+            os.makedirs(TEMPLATES_DIR)
+            HackerUI.print_log_entry("SYSTEM", f"Pasta '{TEMPLATES_DIR}' criada. Coloque as imagens lá!", "WARN")
+
+    # --- FUNÇÕES ADB BÁSICAS ---
+    def run_adb(self, cmd: str, binary=False):
         try:
-            requests.post(WEBHOOK_DISCORD, json={"content": f"!bypass {link}"})
+            args = ["adb"] + cmd.split()
+            res = subprocess.run(args, capture_output=True, timeout=10)
+            return res.stdout if binary else res.stdout.decode().strip()
         except:
-            log("ERRO", "Falha ao enviar webhook")
+            return b"" if binary else ""
 
-        # Aguarda a Key
-        log("KEY", "Aguardando Key da API local...")
-        key_recebida = None
-        for _ in range(30): # Tenta por 60 segundos
+    # --- VISÃO COMPUTACIONAL ---
+    def screenshot(self):
+        raw = self.run_adb("exec-out screencap -p", binary=True)
+        if not raw: return None
+        try:
+            arr = np.frombuffer(raw, np.uint8)
+            return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        except:
+            return None
+
+    def find_click(self, screen, template_name):
+        path = os.path.join(TEMPLATES_DIR, template_name)
+        if not os.path.exists(path): return False
+        
+        tpl = cv2.imread(path)
+        if tpl is None: return False
+
+        res = cv2.matchTemplate(screen, tpl, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(res)
+
+        if max_val >= self.config["threshold"]:
+            h, w = tpl.shape[:2]
+            cx, cy = max_loc[0] + w // 2, max_loc[1] + h // 2
+            HackerUI.print_log_entry("VISION", f"Objeto detectado: {template_name} ({max_val:.2f})", "SUCCESS")
+            self.run_adb(f"shell input tap {cx} {cy}")
+            return True
+        return False
+
+    def check_freeze(self, screen):
+        # Reduz imagem para criar hash rápido
+        small = cv2.resize(screen, (50, 50))
+        curr_hash = hash(small.tobytes())
+        
+        if curr_hash == self.last_screen_hash:
+            if time.time() - self.last_screen_time > 60: # 60s congelado
+                return True
+        else:
+            self.last_screen_hash = curr_hash
+            self.last_screen_time = time.time()
+        return False
+
+    # --- LÓGICA DO KEY SYSTEM ---
+    def handle_key_system(self, screen):
+        # Verifica se o botão "Receive Key" está na tela
+        if self.find_click(screen, "receive_key.png"):
+            HackerUI.print_log_entry("KEY", "⚠️ SISTEMA DE KEY DETECTADO! INICIANDO BYPASS...", "KEY")
+            time.sleep(5) # Espera navegador abrir
+            
+            # Fecha Chrome/Browser para garantir foco
+            self.run_adb("shell am force-stop com.android.chrome")
+            time.sleep(1)
+            
+            # Tenta pegar link
+            link = ""
             try:
-                r = requests.get(KEY_API_URL, timeout=2)
-                if len(r.text) > 5:
-                    key_recebida = r.text.strip()
-                    break
+                # Tenta via termux-api (mais confiável)
+                res = subprocess.run(["termux-clipboard-get"], capture_output=True, timeout=3)
+                link = res.stdout.decode().strip()
             except:
                 pass
-            time.sleep(2)
             
-        if key_recebida:
-            log("KEY", f"Key recebida! Colando...")
-            # Cola a key via ADB
-            adb(f'shell input text "{key_recebida}"')
-            time.sleep(1)
-            # Clica no Enter Key se existir imagem, ou Enter do teclado
-            if not find_click(screen, "enter_key.png"):
-                 adb("shell input keyevent 66") # Enter
+            if "http" not in link:
+                HackerUI.print_log_entry("KEY", "Link não copiado. Tentando novamente...", "WARN")
+                return True
+                
+            HackerUI.print_log_entry("KEY", f"Link capturado: {link[:30]}...", "SUCCESS")
             
-            time.sleep(2)
-            find_click(screen, "continue.png")
-            return True
-            
-    return False
+            # Envia para Discord (opcional)
+            if self.config["webhook_url"]:
+                try: requests.post(self.config["webhook_url"], json={"content": f"!bypass {link}"})
+                except: pass
 
-def reiniciar_roblox(package_name):
-    log("RECONNECT", f"Reiniciando {package_name}...")
-    adb(f"shell am force-stop {package_name}")
-    time.sleep(2)
-    # Abre o app (monkey é um truque para abrir sem saber a Activity exata)
-    adb(f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1")
-    time.sleep(10) # Espera carregar menu inicial
-    
-    # Abre o Link VIP (Deeplink)
-    log("RECONNECT", "Entrando no VIP...")
-    adb(f'shell am start -a android.intent.action.VIEW -d "{VIP_LINK}" {package_name}')
+            # Aguarda Key da API Local
+            HackerUI.print_log_entry("KEY", "Aguardando retorno da API Local...", "INFO")
+            key = None
+            for _ in range(20):
+                try:
+                    r = requests.get(KEY_API_URL, timeout=2)
+                    if len(r.text) > 5:
+                        key = r.text.strip()
+                        break
+                except: pass
+                time.sleep(2)
+            
+            if key:
+                HackerUI.print_log_entry("KEY", "🔑 KEY RECEBIDA! INJETANDO...", "SUCCESS")
+                self.run_adb(f'shell input text "{key}"')
+                time.sleep(1)
+                
+                if not self.find_click(screen, "enter_key.png"):
+                    self.run_adb("shell input keyevent 66")
+                
+                time.sleep(2)
+                self.find_click(screen, "continue.png")
+                HackerUI.print_log_entry("KEY", "🔓 ACESSO LIBERADO", "SUCCESS")
+            else:
+                HackerUI.print_log_entry("KEY", "Falha ao obter key (Timeout)", "ERROR")
+            
+            return True # Retorna True pois processamos algo
+        return False
+
+    # --- GERENCIAMENTO DE APP ---
+    def restart_app(self, package):
+        HackerUI.print_log_entry("RESTART", f"Reiniciando {package}...", "WARN")
+        self.run_adb(f"shell am force-stop {package}")
+        time.sleep(2)
+        # Deeplink direto para o servidor VIP
+        cmd = f"shell am start -a android.intent.action.VIEW -d \"{self.config['web_link']}\" {package}"
+        self.run_adb(cmd)
+        self.lowcpu_count[package] = 0
+
+    # --- LOOP PRINCIPAL ---
+    def start(self):
+        HackerUI.print_matrix_banner()
+        if not self.config["packages"]:
+            HackerUI.print_log_entry("ERROR", "Nenhum pacote configurado! Use a opção 3 no menu.", "ERROR")
+            return
+
+        HackerUI.print_log_entry("SYSTEM", f"Monitorando {len(self.config['packages'])} pacotes...", "INFO")
+        
+        while self.running:
+            try:
+                screen = self.screenshot()
+                if screen is None:
+                    HackerUI.print_log_entry("ADB", "Falha na imagem! Verifique conexão ADB.", "ERROR")
+                    time.sleep(5)
+                    continue
+
+                # 1. PRIORIDADE MÁXIMA: KEY SYSTEM
+                if self.handle_key_system(screen):
+                    time.sleep(2)
+                    continue
+
+                # 2. VERIFICAÇÃO DE FREEZE (VISUAL)
+                if self.check_freeze(screen):
+                    HackerUI.print_log_entry("FREEZE", "Tela congelada detectada! Reiniciando...", "ERROR")
+                    self.restart_app(self.config["packages"][0])
+                    continue
+
+                # 3. VERIFICAÇÃO DE PROCESSO/CPU
+                for pkg in self.config["packages"]:
+                    pid = self.run_adb(f"shell pidof {pkg}")
+                    
+                    if not pid:
+                        HackerUI.print_log_entry("PROC", f"{pkg} fechado. Reiniciando...", "WARN")
+                        self.restart_app(pkg)
+                        continue
+                    
+                    # Checagem de CPU (Simples)
+                    try:
+                        top = self.run_adb(f"shell top -n 1 -b | grep {pid}")
+                        cpu = float(top.split()[8].replace('%', '')) if top else 0
+                        
+                        if cpu < self.config["low_cpu_threshold"]:
+                            self.lowcpu_count[pkg] = self.lowcpu_count.get(pkg, 0) + 1
+                            HackerUI.print_log_entry("CPU", f"{pkg}: {cpu}% (Baixo) [{self.lowcpu_count[pkg]}/{self.config['max_lowcpu_time']}]", "WARN")
+                            
+                            if self.lowcpu_count[pkg] >= self.config["max_lowcpu_time"]:
+                                self.restart_app(pkg)
+                        else:
+                            self.lowcpu_count[pkg] = 0
+                            HackerUI.print_log_entry("STATUS", f"{pkg}: {cpu}% CPU - Operacional", "SUCCESS")
+                    except:
+                        pass
+
+                time.sleep(self.config["check_interval"])
+
+            except KeyboardInterrupt:
+                self.running = False
+            except Exception as e:
+                HackerUI.print_log_entry("CRITICAL", f"Erro no loop: {e}", "ERROR")
+
+# ============================================
+# 🔧 SISTEMA
+# ============================================
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return {**DEFAULT_CONFIG, **json.load(f)}
+    return DEFAULT_CONFIG
+
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f, indent=4)
+
+def detect_packages():
+    HackerUI.print_log_entry("SCAN", "Procurando Roblox...", "INFO")
+    res = subprocess.run(["adb", "shell", "pm", "list", "packages"], capture_output=True, text=True)
+    pkgs = [line.split(":")[1].strip() for line in res.stdout.splitlines() if "roblox" in line.lower()]
+    return pkgs
 
 def main():
-    log("SYSTEM", "Monitor Inteligente Iniciado v2.0")
-    
-    packages = get_installed_roblox()
-    if not packages: return
-
     while True:
-        try:
-            screen = screenshot()
-            if screen is None:
-                log("ERRO", "Falha no Screenshot. ADB desconectado?")
-                time.sleep(5)
-                continue
-
-            # --- PRIORIDADE 1: KEY SYSTEM ---
-            # Se encontrar qualquer elemento de key, foca nisso
-            if resolver_key_system(screen):
-                time.sleep(2)
-                continue
-
-            # --- PRIORIDADE 2: FREEZE ---
-            if check_freeze(screen):
-                reiniciar_roblox(packages[0])
-                last_screen_time = time.time() # Reseta timer
-                continue
-
-            # --- PRIORIDADE 3: ESTÁ RODANDO? ---
-            # Verifica se o processo do Roblox principal morreu
-            proc = adb(f"shell pidof {packages[0]}")
-            if not proc:
-                log("MONITOR", "Roblox fechado. Reiniciando...")
-                reiniciar_roblox(packages[0])
-                time.sleep(15)
-                continue
-            
-            # Se chegou aqui, está tudo bem. Espera um pouco.
-            time.sleep(5)
-
-        except Exception as e:
-            log("CRITICAL", f"Erro no loop: {e}")
-            time.sleep(5)
+        HackerUI.clear_screen()
+        HackerUI.print_matrix_banner()
+        print(f"{HackerTheme.GREEN_DARK}┌──[ MENU PRINCIPAL ]──────────────────────────────┐")
+        print(f"│ 1. {HackerTheme.CYAN}INICIAR MONITOR (Ultimate Mode){HackerTheme.GREEN_DARK}               │")
+        print(f"│ 2. {HackerTheme.YELLOW}DETECTAR ROBLOX (Auto-Setup){HackerTheme.GREEN_DARK}                  │")
+        print(f"│ 3. {HackerTheme.PINK}CONFIGURAR LINK VIP{HackerTheme.GREEN_DARK}                           │")
+        print(f"│ 4. {HackerTheme.RED}SAIR{HackerTheme.GREEN_DARK}                                          │")
+        print(f"└──────────────────────────────────────────────────┘{HackerTheme.RESET}")
+        
+        opt = input(f"\n{HackerTheme.BOLD}root@termux:~$ {HackerTheme.RESET}")
+        
+        config = load_config()
+        
+        if opt == "1":
+            mon = HackerMonitor(config)
+            mon.start()
+        elif opt == "2":
+            pkgs = detect_packages()
+            if pkgs:
+                config["packages"] = pkgs
+                save_config(config)
+                print(f"\n{HackerTheme.GREEN_NEON}Detectados: {pkgs}{HackerTheme.RESET}")
+            else:
+                print(f"\n{HackerTheme.RED}Nenhum Roblox encontrado!{HackerTheme.RESET}")
+            time.sleep(2)
+        elif opt == "3":
+            link = input("Cole seu Link VIP: ")
+            config["web_link"] = link.strip()
+            save_config(config)
+            print("Salvo!")
+            time.sleep(1)
+        elif opt == "4":
+            sys.exit()
 
 if __name__ == "__main__":
     main()
