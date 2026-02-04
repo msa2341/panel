@@ -4,6 +4,7 @@
 Correção Crítica:
   - Traz o Termux para frente rapidinho para ler o clipboard
   - Contorna o bloqueio de privacidade do Android
+  - Modificado para enviar link capturado ao bot do Discord
 """
 
 import os
@@ -27,8 +28,8 @@ CONFIG_FILE = "hacker_config.json"
 KEY_API_URL = "http://127.0.0.1:3000/get_key"
 
 DEFAULT_CONFIG = {
-    "web_link": "",
-    "webhook_url": "", 
+    "web_link": "https://www.roblox.com/games/1537690962/Bee-Swarm-Simulator?privateServerLinkCode=54979473479340063836604255875447",
+    "webhook_url": "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M", 
     "startup_delay": 25,
     "check_interval": 5,
     "packages": [],
@@ -59,6 +60,7 @@ class HackerUI:
         print("╔════════════════════════════════════════════╗")
         print("║   ROBLOX AUTO-SYSTEM V11.0 (PRIVACY FIX)   ║")
         print("║   [Auto-Focus Switch] -> [Read Clipboard]  ║")
+        print("║             by msa, rej_phone              ║")
         print("╚════════════════════════════════════════════╝")
         print(f"{HackerUI.RESET}")
 
@@ -90,7 +92,6 @@ class AutoSystem:
     # --- NOVO: Traz o Termux para frente para ler o clipboard ---
     def get_clipboard_secure(self):
         # 1. Traz o Termux para o foco
-        # HackerUI.log("FOCUS", "Trocando para Termux para ler clipboard...", HackerUI.YELLOW)
         subprocess.run("adb shell monkey -p com.termux -c android.intent.category.LAUNCHER 1", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1.5) # Dá tempo do Android liberar a permissão
 
@@ -105,7 +106,6 @@ class AutoSystem:
 
     # --- Volta para o Roblox ---
     def return_to_game(self, pkg):
-        # HackerUI.log("FOCUS", "Voltando para o jogo...", HackerUI.YELLOW)
         subprocess.run(f"adb shell monkey -p {pkg} -c android.intent.category.LAUNCHER 1", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1.0)
 
@@ -142,8 +142,6 @@ class AutoSystem:
         HackerUI.log("READ", "Lendo Clipboard (Trocando app)...", HackerUI.PURPLE)
         link = self.get_clipboard_secure() # Vai pro Termux e volta
         
-        # Se precisar voltar pro jogo manualmente (caso o get_clipboard_secure não tenha voltado)
-        # Mas vamos voltar agora para garantir que a tela esteja pronta para injetar
         self.return_to_game(pkg) 
 
         HackerUI.log("DEBUG", f"Conteúdo lido: '{link}'", HackerUI.WHITE)
@@ -152,14 +150,19 @@ class AutoSystem:
         if link and "http" in link:
             HackerUI.log("LINK", f"Link Capturado! Processando...", HackerUI.GREEN)
             
-            # 4. ENVIA PARA DISCORD
+            # 4. ENVIA PARA DISCORD (BOT)
+            # Conforme solicitado: "copie ele e mande para o bot do discord"
+            # O código original já tinha uma lógica de webhook, vamos garantir que ela seja usada para o bot.
             if self.config["webhook_url"]:
                 try:
+                    # Formato de comando para o bot do discord
                     payload = {"content": f"!bypass {link}"}
                     requests.post(self.config["webhook_url"], json=payload)
-                    HackerUI.log("DISCORD", "Enviado para Webhook.", HackerUI.PURPLE)
+                    HackerUI.log("DISCORD", "Link enviado ao bot do Discord.", HackerUI.PURPLE)
                 except:
-                    HackerUI.log("ERROR", "Webhook falhou.", HackerUI.RED)
+                    HackerUI.log("ERROR", "Falha ao enviar para o Discord.", HackerUI.RED)
+            else:
+                HackerUI.log("CONFIG", "Webhook URL não configurada no hacker_config.json", HackerUI.YELLOW)
             
             # 5. ESPERA KEY
             HackerUI.log("WAIT", "Aguardando Key da API (40s)...", HackerUI.CYAN)
@@ -177,17 +180,12 @@ class AutoSystem:
             # 6. INJETA A KEY
             if key:
                 HackerUI.log("KEY", "Injetando Key...", HackerUI.GREEN)
-                
-                # Garante que o jogo está em foco de novo
                 self.return_to_game(pkg)
-                
                 self.run_adb(f"input tap {COORD_INPUT}")
                 time.sleep(0.5)
-                
                 safe_key = key.replace(" ", "%s").replace("&", "\&").replace("'", "")
                 self.run_adb(f"input text \"{safe_key}\"")
                 time.sleep(1.0)
-                
                 self.run_adb(f"input tap {COORD_TRIGGER}")
                 HackerUI.log("SUCCESS", "Bypass Finalizado!", HackerUI.GREEN)
             else:
@@ -224,27 +222,20 @@ class AutoSystem:
         while self.running:
             try:
                 for pkg in self.config["packages"]:
-                    
-                    # Checagem de Processo
                     pid_res = subprocess.run(f"adb shell pidof {pkg}", shell=True, capture_output=True)
                     if not pid_res.stdout:
                         self.restart_game(pkg)
                         continue
 
-                    # Startup Check
                     if not self.checked_startup:
                         delay = self.config['startup_delay']
                         HackerUI.log("WAIT", f"Carregando Jogo ({delay}s)...", HackerUI.CYAN)
                         time.sleep(delay)
-                        
-                        # Passamos o pkg para poder voltar ao jogo depois de ler o clipboard
                         self.execute_bypass_logic(pkg)
-                        
                         self.checked_startup = True
                         HackerUI.log("MONITOR", "Vigilância Ativa.", HackerUI.GREEN)
                         continue
 
-                    # Anti-Crash
                     cpu = self.get_cpu_usage(pkg)
                     if cpu < 2.0:
                         self.low_cpu_count += 1
