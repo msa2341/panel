@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 🖥️ Roblox AutoRejoin - Hacker Theme Ultimate 🖥️
-Interface cyberpunk com Visão Computacional e Auto Key System
-Versão: 5.1 - Fixed Coordinates Delta Update
+Interface cyberpunk com Lógica Linear (Blind Mode)
+Versão: 6.0 - Direct Coordinate Injection
 """
 
 import os
@@ -11,31 +11,25 @@ import time
 import json
 import subprocess
 import requests
-import cv2
-import numpy as np
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Optional
 
 # ============================================
-# 🎮 CONFIGURAÇÃO
+# 🎮 CONFIGURAÇÃO E CONSTANTES
 # ============================================
 CONFIG_FILE = "hacker_config.json"
-TEMPLATES_DIR = "templates"
-KEY_API_URL = "http://127.0.0.1:3000/get_key"
+KEY_API_URL = "http://127.0.0.1:3000/get_key" 
 
-# Coordenadas extraídas das suas prints (Delta UI)
-COORD_INPUT_BOX = "779 228"   # Campo para colar a key
-COORD_CONFIRM_BTN = "801 351" # Botão Checkpoint/Continue
+# --- COORDENADAS FIXAS (Baseado nas suas prints) ---
+COORD_INPUT_BOX = "779 228"   # Onde clica para gerar o link / focar
+COORD_CONFIRM_BTN = "801 351" # Botão "Continue" / "Checkpoint"
 
 DEFAULT_CONFIG = {
     "web_link": "https://www.roblox.com/games/1537690962/Bee-Swarm-Simulator?privateServerLinkCode=54979473479340063836604255875447",
-    "webhook_url": "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M",
+    "webhook_url": "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M", # Opcional
     "check_interval": 5,
-    "low_cpu_threshold": 8.0,
-    "max_lowcpu_time": 10,
-    "cooldown_time": 15,
     "packages": [],
-    "threshold": 0.85
+    "startup_delay": 20 # Tempo para esperar o jogo carregar antes de clicar
 }
 
 # ============================================
@@ -54,7 +48,7 @@ class HackerTheme:
     GREEN_NEON = "\033[38;5;82m"
 
 # ============================================
-# 🎨 INTERFACE HACKER
+# 🎨 INTERFACE VISUAL
 # ============================================
 class HackerUI:
     @staticmethod
@@ -69,7 +63,7 @@ class HackerUI:
         print("║  █▀▄░█░█░█▀▄░█░░░█░█░▄▀▄░░░█░▀░█░█░█░█░█░█▀▀░█▀▄  ║")
         print("║  ▀░▀░▀▀▀░▀▀░░▀▀▀░▀▀▀░▀░▀░░░▀░░░▀░▀▀▀░▀▀░░▀▀▀░▀░▀  ║")
         print("╠══════════════════════════════════════════════════════════════╣")
-        print(f"║  {HackerTheme.PINK}v5.1 • DELTA COORDINATES • AUTO BYPASS ENABLED      {HackerTheme.MATRIX}║")
+        print(f"║  {HackerTheme.PINK}v6.0 • BLIND MODE • AUTO DELTA BYPASS               {HackerTheme.MATRIX}║")
         print("╚══════════════════════════════════════════════════════════════╝")
         print(f"{HackerTheme.RESET}")
 
@@ -78,7 +72,7 @@ class HackerUI:
         colors = {
             "INFO": HackerTheme.CYAN, "WARN": HackerTheme.YELLOW,
             "ERROR": HackerTheme.RED, "SUCCESS": HackerTheme.GREEN_NEON,
-            "KEY": HackerTheme.PINK, "VISION": HackerTheme.PURPLE
+            "KEY": HackerTheme.PINK, "ACTION": HackerTheme.PURPLE
         }
         timestamp = datetime.now().strftime("%H:%M:%S")
         color = colors.get(level, HackerTheme.CYAN)
@@ -87,208 +81,163 @@ class HackerUI:
               f"{HackerTheme.RESET}{message}")
 
 # ============================================
-# 🧠 MONITOR INTELIGENTE (OPENCV + ADB)
+# 🧠 LÓGICA DO MONITOR (LINEAR)
 # ============================================
 class HackerMonitor:
     def __init__(self, config: dict):
         self.config = config
         self.running = True
-        self.lowcpu_count: Dict[str, int] = {}
-        self.last_screen_hash = None
-        self.last_screen_time = time.time()
-        
-        if not os.path.exists(TEMPLATES_DIR):
-            os.makedirs(TEMPLATES_DIR)
+        self.checked_startup = False # Controle para executar o bypass apenas uma vez por reinício
 
-    # --- FUNÇÕES ADB BÁSICAS ---
-    def run_adb(self, cmd: str, binary=False):
+    def run_adb(self, cmd: str):
         try:
             args = ["adb"] + cmd.split()
             res = subprocess.run(args, capture_output=True, timeout=10)
-            return res.stdout if binary else res.stdout.decode().strip()
+            return res.stdout.decode().strip()
         except:
-            return b"" if binary else ""
+            return ""
 
-    # --- VISÃO COMPUTACIONAL ---
-    def screenshot(self):
-        raw = self.run_adb("exec-out screencap -p", binary=True)
-        if not raw: return None
+    # --- LÓGICA PRINCIPAL DO BYPASS ---
+    def execute_blind_bypass(self):
+        HackerUI.print_log_entry("BYPASS", f"Iniciando verificação cega em {self.config['startup_delay']}s...", "WARN")
+        
+        # 1. Clicar para tentar gerar o link ou focar
+        HackerUI.print_log_entry("ACTION", f"Clicando no Trigger: {COORD_INPUT_BOX}", "INFO")
+        self.run_adb(f'shell input tap {COORD_INPUT_BOX}')
+        time.sleep(1.5) # Tempo para o Delta reagir e copiar o link
+
+        # 2. Verificar Clipboard
+        link = ""
         try:
-            arr = np.frombuffer(raw, np.uint8)
-            return cv2.imdecode(arr, cv2.IMREAD_COLOR)
-        except:
-            return None
+            res = subprocess.run(["termux-clipboard-get"], capture_output=True, timeout=3)
+            link = res.stdout.decode().strip()
+        except: pass
 
-    def find_click(self, screen, template_name):
-        path = os.path.join(TEMPLATES_DIR, template_name)
-        if not os.path.exists(path): return False
-        
-        tpl = cv2.imread(path)
-        if tpl is None: return False
-
-        res = cv2.matchTemplate(screen, tpl, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, max_loc = cv2.minMaxLoc(res)
-
-        if max_val >= self.config["threshold"]:
-            h, w = tpl.shape[:2]
-            cx, cy = max_loc[0] + w // 2, max_loc[1] + h // 2
-            HackerUI.print_log_entry("VISION", f"Objeto detectado: {template_name} ({max_val:.2f})", "SUCCESS")
-            self.run_adb(f"shell input tap {cx} {cy}")
-            return True
-        return False
-
-    def check_freeze(self, screen):
-        small = cv2.resize(screen, (50, 50))
-        curr_hash = hash(small.tobytes())
-        
-        if curr_hash == self.last_screen_hash:
-            if time.time() - self.last_screen_time > 60:
-                return True
-        else:
-            self.last_screen_hash = curr_hash
-            self.last_screen_time = time.time()
-        return False
-
-    # --- LÓGICA DO KEY SYSTEM (ATUALIZADA) ---
-    def handle_key_system(self, screen):
-        # Gatilho: Ainda usa imagem para saber SE precisa da key, mas usa coords para agir
-        # Você pode substituir "receive_key.png" por qualquer imagem que apareça quando o Delta abre
-        if self.find_click(screen, "receive_key.png") or self.find_click(screen, "get_key.png"):
-            HackerUI.print_log_entry("KEY", "⚠️ DELTA UI DETECTADO! INICIANDO BYPASS...", "KEY")
-            time.sleep(5) 
+        # 3. Decisão
+        if link and ("http" in link) and ("gateway" in link or "delta" in link.lower()):
+            HackerUI.print_log_entry("KEY", f"🔗 LINK DETECTADO! Iniciando injeção...", "SUCCESS")
             
-            self.run_adb("shell am force-stop com.android.chrome")
-            time.sleep(1)
-            
-            # 1. Tenta pegar link
-            link = ""
-            try:
-                res = subprocess.run(["termux-clipboard-get"], capture_output=True, timeout=3)
-                link = res.stdout.decode().strip()
-            except: pass
-            
-            if "http" not in link:
-                HackerUI.print_log_entry("KEY", "Link não copiado. Aguardando...", "WARN")
-                return True
-                
-            HackerUI.print_log_entry("KEY", f"Link capturado: {link[:30]}...", "SUCCESS")
-            
-            # Webhook Discord
+            # Notifica Discord (Opcional)
             if self.config["webhook_url"]:
-                try: requests.post(self.config["webhook_url"], json={"content": f"!bypass {link}"})
+                try: requests.post(self.config["webhook_url"], json={"content": f"Bypass Started: {link}"})
                 except: pass
 
-            # 2. Aguarda Key da API Local
-            HackerUI.print_log_entry("KEY", "Solicitando Key à API...", "INFO")
+            # --- BUSCA A KEY ---
             key = None
-            for _ in range(20):
-                try:
-                    r = requests.get(KEY_API_URL, timeout=2)
-                    if len(r.text) > 5:
-                        key = r.text.strip()
-                        break
-                except: pass
-                time.sleep(2)
-            
-            if key:
-                HackerUI.print_log_entry("KEY", "🔑 KEY RECEBIDA! INJETANDO COM COORDENADAS...", "SUCCESS")
+            HackerUI.print_log_entry("API", "Buscando Key no servidor local...", "INFO")
+            try:
+                # Se sua API precisa do link via POST, descomente a linha abaixo:
+                # r = requests.post(KEY_API_URL, json={"url": link}, timeout=10)
+                # Se for só GET no endpoint local:
+                r = requests.get(KEY_API_URL, timeout=10)
+                key = r.text.strip()
+            except Exception as e:
+                HackerUI.print_log_entry("API", f"Erro na API: {e}", "ERROR")
+
+            # --- INJETA A KEY ---
+            if key and len(key) > 5:
+                HackerUI.print_log_entry("KEY", "🔑 Key Válida! Digitando...", "SUCCESS")
                 
-                # --- PASSO A PASSO COM COORDENADAS FIXAS ---
-                
-                # A. Clicar no Campo de Texto (Foco)
-                HackerUI.print_log_entry("ACTION", f"Clicando no input: {COORD_INPUT_BOX}", "INFO")
+                # Garante foco novamente
                 self.run_adb(f'shell input tap {COORD_INPUT_BOX}')
                 time.sleep(0.5)
                 
-                # B. Limpar campo (Opcional - seleciona tudo e apaga)
-                # self.run_adb("shell input keyevent 29 29 112") # Ctrl+A Del (complicado no android puro)
-                # Vamos confiar que o clique foca no fim ou o campo está vazio
-                
-                # C. Digitar a Key
-                HackerUI.print_log_entry("ACTION", "Digitando Key...", "INFO")
-                # Escapa caracteres especiais se necessário
-                safe_key = key.replace(" ", "%s").replace("&", "\&")
+                # Digita a key (limpa caracteres estranhos)
+                safe_key = key.replace(" ", "%s").replace("&", "\&").replace("'", "")
                 self.run_adb(f'shell input text "{safe_key}"')
                 time.sleep(1.0)
                 
-                # D. Clicar no botão Continue/Checkpoint
-                HackerUI.print_log_entry("ACTION", f"Confirmando Checkpoint: {COORD_CONFIRM_BTN}", "SUCCESS")
+                # Clica em continuar
+                HackerUI.print_log_entry("ACTION", f"Confirmando em {COORD_CONFIRM_BTN}...", "SUCCESS")
                 self.run_adb(f'shell input tap {COORD_CONFIRM_BTN}')
                 
-                HackerUI.print_log_entry("KEY", "🔓 FLUXO DE INJEÇÃO CONCLUÍDO", "SUCCESS")
+                HackerUI.print_log_entry("DONE", "🔓 Processo de Bypass Finalizado.", "SUCCESS")
+                return True
             else:
-                HackerUI.print_log_entry("KEY", "Timeout: Nenhuma key recebida da API", "ERROR")
-            
-            return True 
-        return False
+                HackerUI.print_log_entry("FAIL", "Key não retornada pela API.", "ERROR")
+                return False
 
-    # --- GERENCIAMENTO DE APP ---
+        else:
+            HackerUI.print_log_entry("SYSTEM", "Nenhum link de key detectado. Assumindo jogo normal.", "INFO")
+            # Limpa clipboard para não confundir na próxima
+            try: subprocess.run(["termux-clipboard-set", ""], timeout=1)
+            except: pass
+            return True
+
+    # --- REINICIALIZAÇÃO ---
     def restart_app(self, package):
         HackerUI.print_log_entry("RESTART", f"Reiniciando {package}...", "WARN")
         self.run_adb(f"shell am force-stop {package}")
         time.sleep(2)
-        cmd = f"shell am start -a android.intent.action.VIEW -d \"{self.config['web_link']}\" {package}"
+        
+        # Link VIP ou apenas abrir o app
+        link_vip = self.config['web_link']
+        if "roblox.com" in link_vip:
+            cmd = f"shell am start -a android.intent.action.VIEW -d \"{link_vip}\" {package}"
+        else:
+            cmd = f"shell monkey -p {package} -c android.intent.category.LAUNCHER 1"
+            
         self.run_adb(cmd)
-        self.lowcpu_count[package] = 0
+        
+        # Reseta a flag para fazer a verificação na próxima inicialização
+        self.checked_startup = False 
 
     # --- LOOP PRINCIPAL ---
     def start(self):
         HackerUI.print_matrix_banner()
         if not self.config["packages"]:
-            HackerUI.print_log_entry("ERROR", "Configure os pacotes na opção 2!", "ERROR")
+            HackerUI.print_log_entry("ERROR", "Nenhum pacote configurado!", "ERROR")
             return
 
-        HackerUI.print_log_entry("SYSTEM", "Monitoramento Ativo. Pressione Ctrl+C para sair.", "INFO")
+        HackerUI.print_log_entry("SYSTEM", "Monitoramento Linear Iniciado.", "INFO")
         
         while self.running:
             try:
-                screen = self.screenshot()
-                if screen is None:
-                    HackerUI.print_log_entry("ADB", "Erro de conexão ADB / Screen", "ERROR")
-                    time.sleep(5)
-                    continue
-
-                if self.handle_key_system(screen):
-                    time.sleep(2)
-                    continue
-
-                if self.check_freeze(screen):
-                    HackerUI.print_log_entry("FREEZE", "Tela congelada! Reiniciando...", "ERROR")
-                    self.restart_app(self.config["packages"][0])
-                    continue
-
                 for pkg in self.config["packages"]:
+                    
+                    # 1. Verifica se o APP está rodando
                     pid = self.run_adb(f"shell pidof {pkg}")
                     
                     if not pid:
-                        HackerUI.print_log_entry("PROC", f"{pkg} fechado. Reiniciando...", "WARN")
+                        HackerUI.print_log_entry("PROC", f"{pkg} não está rodando.", "WARN")
                         self.restart_app(pkg)
                         continue
-                    
-                    try:
-                        top = self.run_adb(f"shell top -n 1 -b | grep {pid}")
-                        cpu = float(top.split()[8].replace('%', '')) if top else 0
+
+                    # 2. LÓGICA DE STARTUP (Roda 1x quando abre)
+                    if not self.checked_startup:
+                        HackerUI.print_log_entry("WAIT", f"Aguardando carregamento ({self.config['startup_delay']}s)...", "INFO")
                         
-                        if cpu < self.config["low_cpu_threshold"]:
-                            self.lowcpu_count[pkg] = self.lowcpu_count.get(pkg, 0) + 1
-                            HackerUI.print_log_entry("CPU", f"{pkg}: {cpu}% (Baixo) [{self.lowcpu_count[pkg]}/{self.config['max_lowcpu_time']}]", "WARN")
-                            
-                            if self.lowcpu_count[pkg] >= self.config["max_lowcpu_time"]:
-                                self.restart_app(pkg)
-                        else:
-                            self.lowcpu_count[pkg] = 0
-                            # HackerUI.print_log_entry("STATUS", f"{pkg}: {cpu}% OK", "SUCCESS") # Spam reduction
+                        # Espera o tempo configurado (ex: 20s) para o jogo abrir e o Delta aparecer
+                        time.sleep(self.config['startup_delay'])
+                        
+                        # Tenta o Bypass
+                        self.execute_blind_bypass()
+                        
+                        # Marca como checado para parar de clicar
+                        self.checked_startup = True
+                        HackerUI.print_log_entry("MONITOR", "Modo de vigilância ativado (Anti-Crash).", "INFO")
+                        continue
+
+                    # 3. MONITORAMENTO DE CRASH (Opcional - verifica se travou total)
+                    # Se quiser simplificar, pode deixar apenas o loop verificar se o PID existe.
+                    # Mas vamos adicionar uma checagem leve.
+                    try:
+                        # Se o processo sumir, o loop `if not pid` ali em cima pega.
+                        # Aqui só dormimos para não spammar CPU.
+                        pass 
                     except: pass
 
-                time.sleep(self.config["check_interval"])
+                time.sleep(5) # Checa status a cada 5 segundos
 
             except KeyboardInterrupt:
                 self.running = False
+                print(f"\n{HackerTheme.RED}Encerrando...{HackerTheme.RESET}")
             except Exception as e:
                 HackerUI.print_log_entry("CRITICAL", f"Erro: {e}", "ERROR")
+                time.sleep(5)
 
 # ============================================
-# 🔧 SISTEMA
+# 🔧 MENU E SISTEMA
 # ============================================
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -310,10 +259,10 @@ def main():
     while True:
         HackerUI.clear_screen()
         HackerUI.print_matrix_banner()
-        print(f"{HackerTheme.GREEN_DARK}┌──[ MENU ]────────────────────────────────────────┐")
-        print(f"│ 1. {HackerTheme.CYAN}INICIAR (Delta Bypass Mode){HackerTheme.GREEN_DARK}                   │")
-        print(f"│ 2. {HackerTheme.YELLOW}DETECTAR ROBLOX{HackerTheme.GREEN_DARK}                               │")
-        print(f"│ 3. {HackerTheme.PINK}LINK VIP{HackerTheme.GREEN_DARK}                                      │")
+        print(f"{HackerTheme.GREEN_DARK}┌──[ MENU PRINCIPAL ]──────────────────────────────┐")
+        print(f"│ 1. {HackerTheme.CYAN}INICIAR MONITOR (Modo Cego){HackerTheme.GREEN_DARK}                   │")
+        print(f"│ 2. {HackerTheme.YELLOW}DETECTAR ROBLOX (Auto-Setup){HackerTheme.GREEN_DARK}                  │")
+        print(f"│ 3. {HackerTheme.PINK}CONFIGURAR LINK VIP{HackerTheme.GREEN_DARK}                           │")
         print(f"│ 4. {HackerTheme.RED}SAIR{HackerTheme.GREEN_DARK}                                          │")
         print(f"└──────────────────────────────────────────────────┘{HackerTheme.RESET}")
         
@@ -329,13 +278,16 @@ def main():
             if pkgs:
                 config["packages"] = pkgs
                 save_config(config)
-                print(f"\nSalvo: {pkgs}")
+                print(f"\n{HackerTheme.GREEN_NEON}Detectados: {pkgs}{HackerTheme.RESET}")
             else:
-                print("\nRoblox não encontrado!")
+                print(f"\n{HackerTheme.RED}Nenhum Roblox encontrado!{HackerTheme.RESET}")
             time.sleep(2)
         elif opt == "3":
-            config["web_link"] = input("Link VIP: ").strip()
+            link = input("Cole seu Link VIP: ")
+            config["web_link"] = link.strip()
             save_config(config)
+            print("Salvo!")
+            time.sleep(1)
         elif opt == "4":
             sys.exit()
 
