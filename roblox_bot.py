@@ -27,8 +27,8 @@ CONFIG_FILE = "hacker_config.json"
 KEY_API_URL = "http://127.0.0.1:3000/get_key"
 
 DEFAULT_CONFIG = {
-    "web_link": "https://www.roblox.com/games/1537690962/Bee-Swarm-Simulator?privateServerLinkCode=54979473479340063836604255875447",
-    "webhook_url": "https://discord.com/api/webhooks/1069275367581438022/kBC-roJY3Mb70Va14XOw33CH5CxvVW8dUDw0UTYPLPMFlMoF7W1rN2FD45Hq4VBjfO4M", 
+    "web_link": "",
+    "webhook_url": "", 
     "startup_delay": 25,
     "check_interval": 5,
     "packages": [],
