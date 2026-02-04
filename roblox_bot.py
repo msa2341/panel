@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-🖥️ Roblox AutoRejoin - V9.0 (BROWSER KILLER) 🖥️
-Funcionalidades:
-  1. Multi-Clique no Gatilho (3x)
-  2. Detecção e Fechamento Automático do Navegador
-  3. Envio de Webhook + Injeção de Key
+🖥️ Roblox AutoRejoin - V10.0 (NUCLEAR MODE) 🖥️
+Correções:
+  1. Mata o navegador sem perguntar (Garante o fechamento)
+  2. Mostra o conteúdo exato do Clipboard (Debug)
+  3. Filtro de link mais permissivo
 """
 
 import os
@@ -33,7 +33,7 @@ DEFAULT_CONFIG = {
     "startup_delay": 25,
     "check_interval": 5,
     "packages": [],
-    "browser_package": "com.android.chrome" # Mude se usar outro navegador
+    "browser_package": "com.android.chrome" # Confirme se é esse seu navegador
 }
 
 # ============================================
@@ -46,6 +46,7 @@ class HackerUI:
     YELLOW = "\033[38;5;226m"
     RED = "\033[38;5;196m"
     PURPLE = "\033[38;5;93m"
+    WHITE = "\033[37m"
 
     @staticmethod
     def log(tag, msg, color=CYAN):
@@ -57,8 +58,8 @@ class HackerUI:
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"{HackerUI.GREEN}")
         print("╔════════════════════════════════════════════╗")
-        print("║   ROBLOX AUTO-SYSTEM V9.0 (KILLER)         ║")
-        print("║   [3x Click] -> [Kill Browser] -> [Inject] ║")
+        print("║   ROBLOX AUTO-SYSTEM V10.0 (NUCLEAR)       ║")
+        print("║   [Force Kill Browser] + [Debug Mode]      ║")
         print("╚════════════════════════════════════════════╝")
         print(f"{HackerUI.RESET}")
 
@@ -105,58 +106,38 @@ class AutoSystem:
         except: pass
         return 0.0
 
-    # --- NOVO: Verifica se o Navegador está na tela ---
-    def check_browser_open(self):
-        browser_pkg = self.config["browser_package"]
-        try:
-            # Verifica qual app está no topo (Resumed)
-            cmd = "adb shell dumpsys activity activities | grep mResumedActivity"
-            res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            if browser_pkg in res.stdout:
-                return True
-        except: pass
-        return False
-
-    # --- LÓGICA DO BYPASS 3.0 ---
+    # --- LÓGICA DO BYPASS 4.0 (NUCLEAR) ---
     def execute_bypass_logic(self):
         HackerUI.log("ACTION", f"Iniciando sequência de cliques (3x)...", HackerUI.YELLOW)
         
-        # 1. SPAM DE CLIQUES (Para forçar o Delta a reagir)
+        # 1. SPAM DE CLIQUES
         for i in range(3):
             self.run_adb(f"input tap {COORD_TRIGGER}")
-            time.sleep(0.8) # Pequena pausa entre cliques
+            time.sleep(0.5) 
         
-        # 2. VIGIA DO NAVEGADOR (Espera até 10s para ele abrir)
-        HackerUI.log("WATCH", "Vigiando navegador...", HackerUI.CYAN)
-        browser_opened = False
-        
-        for _ in range(10): # Tenta por 10 segundos
-            if self.check_browser_open():
-                HackerUI.log("DETECT", "Navegador detectado! FECHANDO...", HackerUI.RED)
-                
-                # 3. MATA O NAVEGADOR
-                self.run_adb(f"am force-stop {self.config['browser_package']}")
-                time.sleep(1) # Espera fechar
-                browser_opened = True
-                break
-            time.sleep(1)
+        # 2. ESPERA O NAVEGADOR ABRIR (Sem checar, só espera)
+        HackerUI.log("WAIT", "Aguardando 6s para navegador processar...", HackerUI.CYAN)
+        time.sleep(6) 
 
-        if not browser_opened:
-            HackerUI.log("INFO", "Navegador não abriu (ou foi rápido demais). Verificando clipboard...", HackerUI.CYAN)
+        # 3. MATA O NAVEGADOR (NUCLEAR KILL)
+        HackerUI.log("KILL", f"Forçando fechamento de {self.config['browser_package']}...", HackerUI.RED)
+        self.run_adb(f"am force-stop {self.config['browser_package']}")
+        time.sleep(1.5) # Tempo para o sistema voltar ao jogo
 
-        # 4. VERIFICA CLIPBOARD
+        # 4. VERIFICA CLIPBOARD COM DEBUG
         link = self.get_clipboard()
+        HackerUI.log("DEBUG", f"Conteúdo do Clipboard: '{link}'", HackerUI.WHITE) # MOSTRA O QUE PEGOU
         
-        # Valida Link
-        if link and "http" in link and ("gateway" in link or "delta" in link.lower()):
-            HackerUI.log("LINK", f"Link Capturado: {link[:20]}...", HackerUI.GREEN)
+        # Valida Link (Filtro Relaxado)
+        if link and "http" in link:
+            HackerUI.log("LINK", f"Link Capturado! Enviando...", HackerUI.GREEN)
             
             # 5. ENVIA PARA DISCORD
             if self.config["webhook_url"]:
-                HackerUI.log("DISCORD", f"Enviando '!bypass'...", HackerUI.PURPLE)
                 try:
                     payload = {"content": f"!bypass {link}"}
                     requests.post(self.config["webhook_url"], json=payload)
+                    HackerUI.log("DISCORD", "Webhook enviado com sucesso.", HackerUI.PURPLE)
                 except Exception as e:
                     HackerUI.log("ERROR", f"Webhook falhou: {e}", HackerUI.RED)
             else:
@@ -164,14 +145,15 @@ class AutoSystem:
                 return
 
             # 6. ESPERA RETORNO DA API
-            HackerUI.log("WAIT", "Aguardando Key da API...", HackerUI.CYAN)
+            HackerUI.log("WAIT", "Aguardando Key da API (40s)...", HackerUI.CYAN)
             key = None
             
             # Polling por 40 segundos
             for i in range(20):
                 try:
                     r = requests.get(KEY_API_URL, timeout=2)
-                    if len(r.text) > 5 and "http" not in r.text: # Garante que não é o link de volta
+                    # Verifica se não é o próprio link que voltou
+                    if len(r.text) > 5 and "http" not in r.text: 
                         key = r.text.strip()
                         break
                 except: pass
@@ -191,10 +173,10 @@ class AutoSystem:
                 self.run_adb(f"input tap {COORD_TRIGGER}")
                 HackerUI.log("SUCCESS", "Bypass Finalizado!", HackerUI.GREEN)
             else:
-                HackerUI.log("FAIL", "Timeout: Key não chegou.", HackerUI.RED)
+                HackerUI.log("FAIL", "Timeout: Key não chegou na API.", HackerUI.RED)
         
         else:
-            HackerUI.log("INFO", "Nenhum link novo. Jogo segue normal.", HackerUI.CYAN)
+            HackerUI.log("INFO", "Nenhum link 'http' encontrado.", HackerUI.CYAN)
 
     def restart_game(self, pkg):
         HackerUI.log("RESTART", f"Reiniciando {pkg}...", HackerUI.RED)
@@ -220,7 +202,7 @@ class AutoSystem:
                 HackerUI.log("ERROR", "Roblox não encontrado!", HackerUI.RED)
                 return
 
-        HackerUI.log("SYSTEM", "Sistema V9.0 Iniciado.", HackerUI.GREEN)
+        HackerUI.log("SYSTEM", "Sistema V10.0 Iniciado.", HackerUI.GREEN)
 
         while self.running:
             try:
@@ -248,7 +230,6 @@ class AutoSystem:
                     cpu = self.get_cpu_usage(pkg)
                     if cpu < 2.0:
                         self.low_cpu_count += 1
-                        # HackerUI.log("CPU", f"Baixo ({cpu}%). {self.low_cpu_count}/10", HackerUI.YELLOW)
                         if self.low_cpu_count >= 12: # ~1 min travado
                             HackerUI.log("FREEZE", "Jogo Congelado.", HackerUI.RED)
                             self.restart_game(pkg)
@@ -264,34 +245,7 @@ class AutoSystem:
                 HackerUI.log("ERROR", str(e), HackerUI.RED)
                 time.sleep(5)
 
-# ============================================
-# 🔧 MENU
-# ============================================
-def menu():
-    app = AutoSystem()
-    while True:
-        HackerUI.banner()
-        print(f"{HackerUI.GREEN}[1] INICIAR V9.0 (KILLER MODE)")
-        print(f"{HackerUI.YELLOW}[2] CONFIGURAR LINK VIP")
-        print(f"{HackerUI.PURPLE}[3] CONFIGURAR WEBHOOK")
-        print(f"{HackerUI.RED}[4] SAIR{HackerUI.RESET}")
-        
-        opt = input("\nroot@termux:~$ ")
-        
-        if opt == "1":
-            app.start()
-        elif opt == "2":
-            link = input("Link VIP: ").strip()
-            if link:
-                app.config["web_link"] = link
-                app.save_config()
-        elif opt == "3":
-            url = input("Webhook URL: ").strip()
-            if url:
-                app.config["webhook_url"] = url
-                app.save_config()
-        elif opt == "4":
-            sys.exit()
-
 if __name__ == "__main__":
-    menu()
+    menu_opt = input("Pressione ENTER para iniciar v10.0...")
+    app = AutoSystem()
+    app.start()
